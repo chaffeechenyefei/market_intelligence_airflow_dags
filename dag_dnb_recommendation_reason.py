@@ -1,8 +1,3 @@
-import os
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
-
 from __future__ import print_function
 
 import time
@@ -13,6 +8,11 @@ import airflow
 from airflow.models import DAG
 from airflow.operators.python_operator import PythonOperator,BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
+
+import os,sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 from dnb.header import *
 from dnb.utils import *

@@ -36,11 +36,12 @@ compstak_dnb_match_file = 'compstak_dnb_v2.csv'
 
 kwargs_key = 'ti'
 
+#in the future it can be moved into Variables
 hdargs = {
-    'run_root':'/home/ubuntu/location_recommender_system',
-    'ls_card':'location_scorecard_200106.csv',
-    'apps':'_200106.csv',
-    'otversion':'_200106.csv',
+    "run_root":"/home/ubuntu/location_recommender_system",
+    "ls_card":"location_scorecard_200106.csv",
+    "apps":"_200106.csv",
+    "otversion":"_200106.csv",
 }
 
 datapath = hdargs['run_root']

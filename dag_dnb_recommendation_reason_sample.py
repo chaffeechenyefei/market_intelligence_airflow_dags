@@ -16,10 +16,9 @@ from dnb.header import *
 from dnb.utils import *
 from dnb.reason_generator import reason_similar_biz
 
-sfx = ['', '_right']
-
-cid = 'duns_number'
-bid = 'atlas_location_uuid'
+# sfx = ['', '_right']
+# cid = 'duns_number'
+# bid = 'atlas_location_uuid'
 
 args = {
     'owner': 'Airflow',
@@ -35,16 +34,6 @@ dag = DAG(
     default_args=args,
     schedule_interval=None,
 )
-
-
-# task_read_data = PythonOperator(
-#     task_id = 'task_read_data',
-#     provide_context=False,
-#     python_callable = ,
-#     dag = dag,
-#
-# )
-
 
 task_reason_similar_biz_op = BranchPythonOperator(
     task_id='task_reason_similar_biz_branching',

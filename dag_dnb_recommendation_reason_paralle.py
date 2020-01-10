@@ -50,7 +50,7 @@ prev_city_op_tail = main_op
 
 for ind_city in range(len(citylongname)):
     reason_names = hdargs["reason_col_name"]
-    task_city_id = cityabbr + '_begin'
+    task_city_id = cityabbr[ind_city] + '_begin'
     city_op = PythonOperator(
         task_id = task_city_id,
         python_callable = lambda: print('Start processing %s'%task_city_id),
@@ -61,7 +61,7 @@ for ind_city in range(len(citylongname)):
     """
     prev_city_op_tail >> city_op
 
-    sub_task_merge_id = cityabbr + '_merge'
+    sub_task_merge_id = cityabbr[ind_city] + '_merge'
     merge_op = PythonOperator(
         task_id = sub_task_merge_id,
         python_callable = lambda: print('Merging %s'%sub_task_merge_id),
@@ -72,9 +72,9 @@ for ind_city in range(len(citylongname)):
     prev_city_op_tail = merge_op
 
     for reason_name in reason_names.keys():
-        sub_task_branch_id = cityabbr + reason_name + '_branching'
-        sub_task_exe_id = cityabbr + reason_name + '_exe'
-        sub_task_dummy_id = cityabbr + reason_name + '_dummy'
+        sub_task_branch_id = cityabbr[ind_city] + reason_name + '_branching'
+        sub_task_exe_id = cityabbr[ind_city] + reason_name + '_exe'
+        sub_task_dummy_id = cityabbr[ind_city] + reason_name + '_dummy'
 
         branch_op = BranchPythonOperator(
             task_id= sub_task_branch_id,

@@ -48,7 +48,7 @@ dag = DAG(
 
 task_reason_similar_biz_op = BranchPythonOperator(
     task_id='task_reason_similar_biz_branching',
-    python_callable='task_gen_reason_similar_biz',
+    python_callable= lambda:'task_gen_reason_similar_biz',
     dag=dag,
 )
 

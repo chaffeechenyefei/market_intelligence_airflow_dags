@@ -72,6 +72,7 @@ main_op = DummyOperator(
 
 end_op = DummyOperator(
     task_id = 'End',
+    trigger_rule = 'none_failed',
     dag = dag,
 )
 

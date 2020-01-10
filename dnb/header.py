@@ -42,7 +42,26 @@ hdargs = {
     "ls_card":"location_scorecard_200106.csv",
     "apps":"_200106.csv",
     "otversion":"_200106.csv",
+    "reason_col_name":{
+        "reason_similar_biz":
+            {"p":1,"useFLG":1},
+        "reason_location_based":
+            {"p":7,"useFLG":1},
+        "reason_model_based":
+            {"p":8,"useFLG":1},
+        "reason_similar_location":
+            {"p":6,"useFLG":1},
+        "reason_similar_company":
+            {"p":5,"useFLG":1},
+        "reason_close_2_current_location":
+            {"p":2,"useFLG":1},
+        "reason_inventory_bom":
+            {"p": 3, "useFLG": 1},
+        "reason_compstak":
+            {"p": 4, "useFLG": 1}
+    }
 }
+
 
 datapath = hdargs['run_root']
 datapath_mid = pj(datapath, 'tmp_table')

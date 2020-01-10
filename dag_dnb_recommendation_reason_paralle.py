@@ -93,7 +93,8 @@ for ind_city in range(len(citylongname)):
 
         branch_op = BranchPythonOperator(
             task_id= sub_task_branch_id,
-            python_callable=branch_choice(),
+            provide_context=True,
+            python_callable=branch_choice,
             op_kwargs={
                 'useFLG':reason_names[reason_name]["useFLG"],
                 'task':[sub_task_exe_id,sub_task_dummy_id],

@@ -41,7 +41,7 @@ reason_col_name = [
     ('reason_compstak', 4, True),
 ]
 
-def reason_similar_biz(**kwargs):
+def reason_similar_biz():
     print('1. Is there a company with similar biz inside the location?')
     for ind_city in range(len(cityname)):
         print('##city: %s processing##' % cityname[ind_city])

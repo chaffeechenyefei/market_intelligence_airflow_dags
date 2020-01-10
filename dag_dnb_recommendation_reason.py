@@ -10,15 +10,11 @@ from airflow.operators.python_operator import PythonOperator,BranchPythonOperato
 from airflow.operators.dummy_operator import DummyOperator
 
 import os,sys
-# curPath = os.path.abspath(os.path.dirname(__file__))
-# rootPath = os.path.split(curPath)[0]
-# sys.path.append(rootPath)
-import sys
 sys.path.insert(0,os.path.abspath(os.path.dirname(__file__)))
 
 from dnb.header import *
 from dnb.utils import *
-from dnb.reason_generator import *
+from dnb.reason_generator import reason_similar_biz
 
 sfx = ['', '_right']
 
@@ -58,7 +54,7 @@ task_reason_similar_biz_op = BranchPythonOperator(
 
 task_gen_reason_similar_biz_op = PythonOperator(
     task_id = 'task_gen_reason_similar_biz',
-    provide_context=True,
+    provide_context=False,
     python_callable = reason_similar_biz,
     dag = dag,
 )
@@ -74,4 +70,9 @@ main_op = DummyOperator(
     dag= dag,
     )
 
-main_op >> task_reason_similar_biz_op >> [ task_gen_reason_similar_biz_op, dummy_gen_reason_similar_biz_op ]
+end_op = DummyOperator(
+    task_id = 'End',
+    dag = dag,
+)
+
+main_op >> task_reason_similar_biz_op >> [ task_gen_reason_similar_biz_op, dummy_gen_reason_similar_biz_op ] >> end_op

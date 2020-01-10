@@ -9,9 +9,9 @@ from airflow.models import DAG
 from airflow.operators.python_operator import PythonOperator,BranchPythonOperator
 from airflow.operators.dummy_operator import DummyOperator
 
-from dnb.header import *
-from dnb.utils import *
-from dnb.reason_generator import *
+from .dnb.header import *
+from .dnb.utils import *
+from .dnb.reason_generator import *
 
 sfx = ['', '_right']
 

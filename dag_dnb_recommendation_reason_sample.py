@@ -30,7 +30,7 @@ args = {
 Create a DAG to execute tasks
 """
 dag = DAG(
-    dag_id='dnb_recommendation_reason',
+    dag_id='dnb_recommendation_reason_sample',
     default_args=args,
     schedule_interval=None,
 )

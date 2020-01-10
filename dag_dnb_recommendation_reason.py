@@ -10,9 +10,11 @@ from airflow.operators.python_operator import PythonOperator,BranchPythonOperato
 from airflow.operators.dummy_operator import DummyOperator
 
 import os,sys
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
+# curPath = os.path.abspath(os.path.dirname(__file__))
+# rootPath = os.path.split(curPath)[0]
+# sys.path.append(rootPath)
+import sys
+sys.path.insert(0,os.path.abspath(os.path.dirname(__file__)))
 
 from dnb.header import *
 from dnb.utils import *

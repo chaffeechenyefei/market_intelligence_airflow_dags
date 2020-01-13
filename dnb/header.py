@@ -34,7 +34,7 @@ compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
 compstak_dnb_match_file = 'compstak_dnb_v2.csv'
 
 
-kwargs_key = 'ti'
+kwargs_key = 'task_instance'
 
 #in the future it can be moved into Variables
 hdargs = {
@@ -45,23 +45,40 @@ hdargs = {
     "reason_col_name":{
         "reason_similar_biz":
             {"p":1,"useFLG":1},
-        "reason_location_based":
-            {"p":7,"useFLG":1},
-        "reason_model_based":
-            {"p":8,"useFLG":1},
-        "reason_similar_location":
-            {"p":6,"useFLG":1},
-        "reason_similar_company":
-            {"p":5,"useFLG":1},
+        # "reason_location_based":
+        #     {"p":7,"useFLG":1},
+        # "reason_model_based":
+        #     {"p":8,"useFLG":1},
+        # "reason_similar_location":
+        #     {"p":6,"useFLG":1},
+        # "reason_similar_company":
+        #     {"p":5,"useFLG":1},
         "reason_close_2_current_location":
             {"p":2,"useFLG":1},
-        "reason_inventory_bom":
-            {"p": 3, "useFLG": 1},
-        "reason_compstak":
-            {"p": 4, "useFLG": 1}
-    }
+        # "reason_inventory_bom":
+        #     {"p": 3, "useFLG": 1},
+        # "reason_compstak":
+        #     {"p": 4, "useFLG": 1}
+    },
+    "cid":"duns_number",
+    "bid":"atlas_location_uuid",
+    "test_db":"tmp_table",
+    "dev_db":"reason_table"
 }
 
 
 datapath = hdargs['run_root']
-datapath_mid = pj(datapath, 'tmp_table')
+datapath_mid = pj(datapath, hdargs["test_db"])
+
+clfile = [c + hdargs['apps'] for c in cityabbr]
+ssfile = ['all_ww_' + c.replace(hdargs['apps'], '') + '_similarity' + hdargs['apps'] for c in clfile]
+rsfile = ['z_reason_' + c + '_similarity' + hdargs['otversion'] for c in cityabbr]
+
+cfile = origin_comp_file
+lfile = hdargs['ls_card']
+cityname = citylongname
+comp_feat_file = 'company_feat' + hdargs['apps']
+loc_feat_file = 'location_feat' + hdargs['apps']
+
+cid = hdargs["cid"]
+bid = hdargs["bid"]

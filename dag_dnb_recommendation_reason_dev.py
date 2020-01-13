@@ -1,5 +1,5 @@
 """
-Sample of city sequence reason parrall framework.
+DEV codes
 """
 from __future__ import print_function
 
@@ -16,7 +16,8 @@ sys.path.insert(0,os.path.abspath(os.path.dirname(__file__)))
 
 from dnb.header import *
 from dnb.utils import *
-from dnb.reason_generator import reason_similar_biz
+
+from dnb import reason_lib as rslib
 
 # sfx = ['', '_right']
 # cid = 'duns_number'
@@ -32,7 +33,7 @@ args = {
 Create a DAG to execute tasks
 """
 dag = DAG(
-    dag_id='dnb_recommendation_reason_paralle',
+    dag_id='dnb_recommendation_reason_dev',
     default_args=args,
     schedule_interval=None,
 )
@@ -62,12 +63,17 @@ prev_city_op_tail = main_op
 
 for ind_city in range(len(citylongname)):
     reason_names = hdargs["reason_col_name"]
+
+
     task_city_id = cityabbr[ind_city] + '_begin'
+
+    #data preparation
     city_op = PythonOperator(
         task_id = task_city_id,
-        python_callable = fake_exe,
+        provide_context=True,
+        python_callable = rslib.data_prepare,
         op_kwargs = {
-            'word':task_city_id
+            'ind_city':ind_city,
         },
         dag = dag,
     )
@@ -76,12 +82,28 @@ for ind_city in range(len(citylongname)):
     """
     prev_city_op_tail >> city_op
 
+    """
+    Name of sub reason result for each city 
+    """
+    sub_reason_file_names = {}
+    for reason_name in reason_names.keys():
+        sub_reason_file_names['reason_name'] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
+
+    """
+    Name of merged reason db for each city
+    """
+    city_reason_file_name = rsfile[ind_city]
+
     sub_task_merge_id = cityabbr[ind_city] + '_merge'
     merge_op = PythonOperator(
         task_id = sub_task_merge_id,
-        python_callable=fake_exe,
+        provide_context=True,
+        python_callable= rslib.data_merge_for_city,
         op_kwargs={
-            'word': sub_task_merge_id
+            'city_reason_file_name':city_reason_file_name,
+            'sub_reason_file_names':sub_reason_file_names,
+            'reason_names':reason_names,
+            'var_task_space': task_city_id,
         },
         trigger_rule='none_failed',
         dag = dag,
@@ -92,34 +114,41 @@ for ind_city in range(len(citylongname)):
     for reason_name in reason_names.keys():
         sub_task_branch_id = cityabbr[ind_city] + '_'+ reason_name + '_branching'
         sub_task_exe_id = cityabbr[ind_city] + '_' + reason_name + '_exe'
-        sub_task_dummy_id = cityabbr[ind_city] + '_' + reason_name + '_dummy'
+        sub_task_skip_read_id = cityabbr[ind_city] + '_' + reason_name + '_skip_read'
 
         branch_op = BranchPythonOperator(
             task_id= sub_task_branch_id,
-            provide_context=True,
             python_callable=branch_choice,
             op_kwargs={
                 'useFLG':reason_names[reason_name]["useFLG"],
-                'task':[sub_task_exe_id,sub_task_dummy_id],
+                'task':[sub_task_exe_id,sub_task_skip_read_id],
             },
             dag=dag,
         )
 
+        #function for execution
+        exe_func = getattr(rslib,reason_name)
+        #output file name
+        sub_reason_file_name = sub_reason_file_names[reason_name]
+
         exe_op = PythonOperator(
             task_id = sub_task_exe_id,
-            python_callable=fake_exe,
+            provide_context=True,
+            python_callable=exe_func,
             op_kwargs={
-                'word': sub_task_exe_id
+                'sub_reason_col_name':reason_name,
+                'sub_reason_file_name':sub_reason_file_name,
+                'var_task_space':task_city_id,
             },
             dag = dag,
         )
 
-        dummy_op = DummyOperator(
-            task_id = sub_task_dummy_id,
-            dag=dag,
+        skip_read_op = DummyOperator(
+            task_id = sub_task_skip_read_id,
+            dag = dag,
         )
 
-        city_op >> branch_op >> [exe_op,dummy_op] >> merge_op
+        city_op >> branch_op >> [exe_op,skip_read_op] >> merge_op
 
 
 prev_city_op_tail >> end_op

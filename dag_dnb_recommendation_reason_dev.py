@@ -64,9 +64,10 @@ prev_city_op_tail = main_op
 for ind_city in range(len(citylongname)):
     reason_names = hdargs["reason_col_name"]
 
-
+    """
+    task of each city
+    """
     task_city_id = cityabbr[ind_city] + '_begin'
-
     #data preparation
     city_op = PythonOperator(
         task_id = task_city_id,

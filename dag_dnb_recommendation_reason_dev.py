@@ -87,7 +87,7 @@ for ind_city in range(len(citylongname)):
     """
     sub_reason_file_names = {}
     for reason_name in reason_names.keys():
-        sub_reason_file_names['reason_name'] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
+        sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
 
     """
     Name of merged reason db for each city

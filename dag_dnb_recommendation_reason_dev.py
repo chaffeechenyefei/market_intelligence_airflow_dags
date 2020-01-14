@@ -95,6 +95,9 @@ for ind_city in range(len(citylongname)):
     """
     city_reason_file_name = rsfile[ind_city]
 
+    """
+    Merge module: merging all the reason in one db for each city
+    """
     sub_task_merge_id = cityabbr[ind_city] + '_merge'
     merge_op = PythonOperator(
         task_id = sub_task_merge_id,
@@ -110,6 +113,7 @@ for ind_city in range(len(citylongname)):
         dag = dag,
     )
 
+    # prev_tail >> next_head
     prev_city_op_tail = merge_op
 
     for reason_name in reason_names.keys():
@@ -117,6 +121,9 @@ for ind_city in range(len(citylongname)):
         sub_task_exe_id = cityabbr[ind_city] + '_' + reason_name + '_exe'
         sub_task_skip_read_id = cityabbr[ind_city] + '_' + reason_name + '_skip_read'
 
+        """
+        Pick a branch according to hdargs['reason_col_name']['useFLG']
+        """
         branch_op = BranchPythonOperator(
             task_id= sub_task_branch_id,
             python_callable=branch_choice,
@@ -126,8 +133,10 @@ for ind_city in range(len(citylongname)):
             },
             dag=dag,
         )
-
-        #function for execution
+        """
+        Execution module
+        """
+        #function for execution, here the function is named as reason_name
         exe_func = getattr(rslib,reason_name)
         #output file name
         sub_reason_file_name = sub_reason_file_names[reason_name]

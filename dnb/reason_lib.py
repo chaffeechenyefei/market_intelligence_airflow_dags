@@ -17,7 +17,11 @@ def data_merge_for_city(city_reason_file_name,sub_reason_file_names,reason_names
 
     for reason_name,value in reason_names.items():
         # priority,useFLG = value["p"],value["useFLG"]
-        reason_db = pd.read_csv(pjoin(datapath_mid,sub_reason_file_names[reason_name]),index_col=0)
+        db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
+        if os.path.isfile(db_path):
+            reason_db = pd.read_csv( db_path,index_col=0)
+        else:
+            print('%s skipped because no file is found in %s'%(reason_name,str(db_path)))
         match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
         sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
 

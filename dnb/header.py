@@ -63,12 +63,18 @@ hdargs = {
     "cid":"duns_number",
     "bid":"atlas_location_uuid",
     "test_db":"tmp_table",
-    "dev_db":"reason_table"
+    "dev_db":"reason_table",
+    "test":1,
 }
 
 
 datapath = hdargs['run_root']
-datapath_mid = pj(datapath, hdargs["test_db"])
+
+TEST_FLG = hdargs["test"]
+if TEST_FLG:
+    datapath_mid = pj(datapath, hdargs["test_db"])
+else:
+    datapath_mid = pj(datapath, hdargs["dev_db"])
 
 clfile = [c + hdargs['apps'] for c in cityabbr]
 ssfile = ['all_ww_' + c.replace(hdargs['apps'], '') + '_similarity' + hdargs['apps'] for c in clfile]

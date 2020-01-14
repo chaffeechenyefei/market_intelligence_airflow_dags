@@ -160,5 +160,11 @@ for ind_city in range(len(citylongname)):
 
         city_op >> branch_op >> [exe_op,skip_read_op] >> merge_op
 
+merging_all_op = PythonOperator(
+    task_id='merging_all',
+    # provide_context=True,
+    python_callable=rslib.data_merge_for_all_cities,
+    dag=dag,
+)
 
-prev_city_op_tail >> end_op
+prev_city_op_tail >> merging_all_op >> end_op

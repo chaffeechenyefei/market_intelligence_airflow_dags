@@ -10,6 +10,40 @@ def set_xcom_var(ti, key, value):
 def get_xcom_var(ti, task_id, key):
     return ti.xcom_pull(task_ids=task_id, key=key)
 
+def data_merge_for_all_cities():
+    print('merging results')
+    dfs = []
+    for filename in rsfile:
+        db_path = pjoin(datapath_mid, filename)
+        if os.path.isfile(db_path):
+            dfs.append(pd.read_csv(db_path, index_col=0))
+        else:
+            print('Missing: %s'%str(db_path))
+
+    dfs = pd.concat(dfs, axis=0).reset_index(drop=True)
+
+    loc_df = dfs.groupby(bid, sort=True)[[bid]].first().reset_index(drop=True)
+
+    k = list(range(len(loc_df)))
+    pd_id = pd.DataFrame(np.array(k), columns=['building_id'])
+    loc_df = pd.concat([loc_df, pd_id], axis=1)
+
+    dfs = dfs[['company_id', 'similarity', 'note', 'algorithm', 'atlas_location_uuid']].merge(loc_df,
+                                                                                              on='atlas_location_uuid',
+                                                                                              how='left',
+                                                                                              suffixes=['', '_right'])
+
+    col_list = ['company_id', 'building_id', 'similarity', 'note', 'algorithm', 'atlas_location_uuid']
+    dfs = dfs[col_list]
+
+    if TEST_FLG:
+        dfs.to_csv('sub_all_similarity_multi_test'+ hdargs["otversion"], index=False)
+    else:
+        dfs.to_csv('sub_all_similarity_multi'+ hdargs["otversion"], index=False)
+
+    print('Done!')
+
+
 def data_merge_for_city(city_reason_file_name,sub_reason_file_names,reason_names, var_task_space,**context):
     ti = context.get("ti")
     print('Merging reasons')

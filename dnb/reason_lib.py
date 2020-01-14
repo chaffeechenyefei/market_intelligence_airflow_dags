@@ -15,20 +15,23 @@ def data_merge_for_city(city_reason_file_name,sub_reason_file_names,reason_names
     print('Merging reasons')
     sample_sspd = get_xcom_var(ti,var_task_space,'sspd')
 
+    exist_reason = []
     for reason_name,value in reason_names.items():
         # priority,useFLG = value["p"],value["useFLG"]
         db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
         if os.path.isfile(db_path):
+            exist_reason.append(reason_name)
             reason_db = pd.read_csv( db_path,index_col=0)
+            match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
+            sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
         else:
             print('%s skipped because no file is found in %s'%(reason_name,str(db_path)))
-        match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
-        sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
+
 
     sample_sspd = sample_sspd.fillna('')
     print('Json format transforming...')
     sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
-    sorted_reason_col_name = [c[0] for c in sorted_reason_col_name]
+    sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason ]
     sample_sspd['reason'] = sample_sspd.apply(
         lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
                                                    target_phss=['Location similar in: ', 'Implicit reason: ']), axis=1)

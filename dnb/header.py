@@ -62,6 +62,10 @@ hdargs = {
     },
     "cid":"duns_number",
     "bid":"atlas_location_uuid",
+
+    "geo_bit":7,
+    "dist_thresh":500,
+
     "test_db":"tmp_table",
     "dev_db":"reason_table",
     "test":1,

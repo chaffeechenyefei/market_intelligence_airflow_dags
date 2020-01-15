@@ -110,8 +110,8 @@ Codes for normalizaiton
 def data_normalizaiton():
     print('Data normalization')
     cfile = origin_comp_file
-    app_date = hdargs["apps"]
-    apps = app_date + '.csv'
+    apps = hdargs["apps"]
+    app_date = apps.replace('.csv','')
     lfile = hdargs["ls_card"]  # It is fixed as input
     clfile = [c + apps for c in cityabbr]
 

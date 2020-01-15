@@ -68,7 +68,14 @@ hdargs = {
 
     "test_db":"tmp_table",
     "dev_db":"reason_table",
-    "test":1,
+    "test":1, #whether using test_db(space/folder) or dev_db
+
+    "do_data_split":1, #whether doing data split
+    "ratio_data_split":0.9,
+    "train_file":"region_train",
+    "test_file":"region_test",
+    "maxK_region":80,
+    "test_round":8,
 }
 
 

@@ -243,3 +243,123 @@ def data_normalizaiton():
     print('All Done')
 
     print(dat_comp_pd.shape, dat_loc_pd.shape)
+
+"""
+Codes for splitting
+"""
+def data_split():
+    print('==> Data splitting')
+    ratio = hdargs["ratio_data_split"]
+    max_K = hdargs["maxK_region"]
+    apps = hdargs["apps"]
+    test_round = hdargs["test_round"]
+    save_tr_name = hdargs["train_file"] + apps
+    save_tt_name = hdargs["test_file"] + apps
+    cid = hdargs["cid"]
+    bid = hdargs["bid"]
+
+    citynameabbr = cityabbr
+
+    clfile = [c + apps for c in citynameabbr]
+
+    trdats = []
+    ttdats = []
+
+    for ind_city,filename in enumerate(clfile):
+        print('Processing city: %s'%filename)
+        cldat = pd.read_csv(pjoin(datapath,filename))
+        #unique location list
+        locdat = cldat.groupby(bid).first().reset_index()
+        trlocdat = locdat.sample(frac=ratio).reset_index(drop=True)
+        trlocdat['fold'] = 0
+        ttlocdat = locdat.merge(trlocdat, on=bid, how='left', suffixes=sfx)
+        ttlocdat = ttlocdat[ttlocdat['fold'].isnull()].reset_index()
+        trlocdat = trlocdat[[bid]]
+        ttlocdat = ttlocdat[[bid]]
+        print('location for train: %d, for test: %d '%(len(trlocdat),len(ttlocdat)))
+        #attach label
+        trlocdat['fold'] = 0
+        ttlocdat['fold'] = 2
+
+        #attach label into location-company pairs
+        trttlocdat = pd.concat([trlocdat, ttlocdat], axis=0).reset_index(drop=True)
+        cldat = cldat.merge(trttlocdat, on=bid, how='left', suffixes=sfx)[[bid,cid,'fold']]
+        cldat['city'] = ind_city
+        print('location-company pairs for train: %d, for test %d'%(len(cldat[cldat['fold']==0]),len(cldat[cldat['fold']==2])))
+
+        #saveing trdats
+        trdats.append(cldat)
+
+        #operate on ttdats
+        cldat = cldat[cldat['fold'] == 2]
+
+        print('inner loop for test expanding...')
+        for i in range(test_round):
+            print('###Round %d ###'%i)
+            fn = lambda obj: obj.loc[np.random.choice(obj.index, 1, True),:]
+            tbA = cldat.groupby(bid).apply(fn).reset_index(drop=True)[[cid, bid]]
+            print('1.len of tbA %d:'%len(tbA))
+            fn = lambda obj: obj.loc[np.random.choice(obj.index, max_K, True),:]
+            tbB = cldat.groupby(bid).apply(fn).reset_index(drop=True)[[cid, bid]]
+            print('1.len of tbB %d'%len(tbB))
+
+
+            ###======================Pos=============================###
+            tbA['mk'] = 'A'
+            tbB = tbB.merge(tbA,on=[cid,bid],how='left',suffixes=sfx)
+            tbB = tbB[tbB['mk'].isnull()]
+            print('2.len of tbB not included in tbA %d'%len(tbB))
+            #we need to full fill the data
+            tbB = tbB.groupby(bid).apply(fn).reset_index(drop=True)[[cid, bid]]
+            tbB['mk'] = 'B'
+            print('3.len of tbB full filled again %d'%len(tbB))
+            #in case tbB cut some locations from tbA, lets shrink tbA
+            tblocB = tbB.groupby(bid).first().reset_index()
+            print('4.len of locations in tbB %d'%len(tblocB))
+            tbA = tbA.merge(tblocB,on=bid,how='left',suffixes=sfx)
+            tbA = tbA[tbA['mk_right'].notnull()][[cid, bid,'mk']].reset_index(drop=True)
+            print('4.len of tbA with common locations of tbB %d'%len(tbA))
+
+            ###======================Neg=============================###
+            tbAA = pd.concat([tbA,tbA.sample(frac=1).reset_index()\
+                       .rename(columns={cid:cid+'_n',bid: bid+'_n','mk':'mk_n'})]
+                      ,axis=1)
+            print('5.len of negpair %d'%len(tbAA))
+            tbAA = tbAA.merge(cldat,\
+                       left_on=[ cid+'_n',bid],right_on=[cid,bid],\
+                       how='left', suffixes = sfx)
+
+            tbC = tbAA[tbAA[cid+'_right'].isnull()][[cid+'_n',bid]]\
+                    .rename(columns={cid+'_n':cid})
+            print('6.len of neg data %d'%len(tbC))
+
+            #in case tbC cut some locations from tbA and tbB
+            tbC['mk'] = 'C'
+            tblocC = tbC.groupby(bid).first().reset_index()
+            print('6.locations in neg data %d'%len(tblocC))
+            tbA = tbA.merge(tblocC,on=bid,how='left',suffixes=sfx)
+            tbA = tbA[tbA['mk_right'].notnull()][[cid, bid,'mk']].reset_index(drop=True)
+            print('final tbA len %d'%len(tbA))
+
+            tbB = tbB.merge(tblocC,on=bid,how='left',suffixes=sfx)
+            tbB = tbB[tbB['mk_right'].notnull()][[cid, bid,'mk']].reset_index(drop=True)
+            print('final tbB len %d'%len(tbB))
+
+            tbA = tbA.sort_values(by=bid)
+            tbB = tbB.sort_values(by=bid)
+            tbC = tbC.sort_values(by=bid)
+
+            assert(len(tbA)==len(tbC) and len(tbB)==len(tbA)*max_K)
+
+            result = pd.concat([tbA, tbB, tbC], axis=0).reset_index(drop=True)
+            result['city'] = ind_city
+            print(len(result))
+
+            ttdats.append(result)
+
+
+    trdats = pd.concat(trdats,axis=0).reset_index(drop=True)
+    ttdats = pd.concat(ttdats,axis=0).reset_index(drop=True)
+
+    trdats.to_csv(save_tr_name)
+    ttdats.to_csv(save_tt_name)

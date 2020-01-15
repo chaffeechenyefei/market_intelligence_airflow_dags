@@ -58,5 +58,30 @@ exe_op = PythonOperator(
     dag = dag,
 )
 
-exe_op >> trigger_op
+
+"""
+Pick a branch according to hdargs
+"""
+task_split_data_id = 'task_data_splitting'
+task_dummy_id = 'task_dummy'
+
+branch_task_id = 'splitting_train_val_data_or_not'
+branch_op = BranchPythonOperator(
+    task_id= branch_task_id,
+    python_callable= lambda: task_split_data_id if hdargs["do_data_split"] else task_dummy_id,
+    dag=dag,
+)
+
+split_op = PythonOperator(
+    task_id = task_split_data_id,
+    python_callable = dnblib.data_split,
+    dag = dag,
+)
+
+dummy_op = DummyOperator(
+    task_id = task_dummy_id,
+    dag = dag,
+)
+
+exe_op >> branch_op >> [split_op,dummy_op] >> trigger_op
 

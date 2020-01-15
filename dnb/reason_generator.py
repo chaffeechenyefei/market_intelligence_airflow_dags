@@ -9,8 +9,8 @@ from dnb.utils import *
 #     :return:
 #     """
 #     kwargs[kwargs_key].xcom_push(key='',value=)
-cid = 'duns_number'
-bid = 'atlas_location_uuid'
+# cid = 'duns_number'
+# bid = 'atlas_location_uuid'
 sfx = ['', '_right']
 
 

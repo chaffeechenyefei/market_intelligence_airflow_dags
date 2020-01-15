@@ -51,7 +51,7 @@ def conditionally_trigger(context, dag_run_obj):
 
 trigger_op = TriggerDagRunOperator(
     task_id='trigger_next_dag',
-    trigger_dag_id='dnb_recommendation_reason_paralle', #test mode
+    trigger_dag_id='dnb_data_normalization_dev', #test mode
     python_callable=conditionally_trigger,
     trigger_rule = 'none_failed',
     dag=dag,

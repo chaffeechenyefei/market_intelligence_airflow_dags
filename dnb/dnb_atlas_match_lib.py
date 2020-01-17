@@ -357,12 +357,11 @@ def data_split():
 
             ttdats.append(result)
 
+    trdats = pd.concat(trdats, axis=0).reset_index(drop=True)
+    ttdats = pd.concat(ttdats, axis=0).reset_index(drop=True)
 
-    trdats = pd.concat(trdats,axis=0).reset_index(drop=True)
-    ttdats = pd.concat(ttdats,axis=0).reset_index(drop=True)
-
-    trdats.to_csv(save_tr_name)
-    ttdats.to_csv(save_tt_name)
+    trdats.to_csv(pjoin(datapath_mid, save_tr_name))
+    ttdats.to_csv(pjoin(datapath_mid, save_tt_name))
 
 
 

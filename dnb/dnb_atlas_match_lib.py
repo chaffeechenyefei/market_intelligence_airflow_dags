@@ -363,3 +363,53 @@ def data_split():
 
     trdats.to_csv(save_tr_name)
     ttdats.to_csv(save_tt_name)
+
+
+
+"""
+Produce prediction file
+"""
+def prod_prediction_pair(**op_kwargs):
+    save_filename = op_kwargs['save_filename']
+    pdc_all = pd.read_csv(pjoin(datapath_mid, salesforce_dnb_file))[[cid, 'city']]
+    for ind_city, str_city in enumerate(cityname):
+        pdcl = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))[[bid, cid]]
+        pdc = pdc_all.loc[pdc_all['city'] == str_city]
+        tot_comp = len(pdc)
+        print('Total %d company found in %s from salesforce' % (tot_comp, str_city))
+        pdc[bid] = 'a'
+        # in case of multi-mapping
+        all_loc_name = pdcl[[bid]].groupby([bid])[
+            [bid]].first().reset_index(drop=True)
+        print('Total %d locations have companies inside.' % len(all_loc_name))
+
+        loc_feat = pd.read_csv(pjoin(datapath, lfile))[[bid, 'is_wework']]
+        loc_ww = loc_feat.loc[loc_feat['is_wework'] == True]
+        print('Total %d locations inside ls card belonged to ww.' % len(loc_ww))
+        all_loc_name = \
+            all_loc_name.merge(loc_ww, on=bid, how='inner', suffixes=['', '_right'])[
+                [bid]]
+
+        tot_loc = len(all_loc_name)
+        print('Total %d locations belonged to ww in %s' % (tot_loc, str_city))
+
+        all_loc_name['key'] = 0
+        pdc['key'] = 0
+
+        testing_pair = pd.merge(pdc, all_loc_name, on='key', how='left',
+                                suffixes=['_left', '_right']).reset_index(drop=True)
+
+        print('testing pairs: %d, location number:%d, company number:%d' % (
+        len(testing_pair), len(all_loc_name), len(pdc)))
+
+        testing_pair = testing_pair.rename(
+            columns={bid+'_left': 'groundtruth', bid+'_right': bid})
+        testing_pair = testing_pair[[cid, bid, 'groundtruth']]
+        testing_pair['label'] = (testing_pair[bid] == testing_pair['groundtruth'])
+        testing_pair = testing_pair[[cid, bid, 'label']]
+
+        testing_pair.to_csv(pjoin(datapath_mid, (save_filename % cityabbr[ind_city])))
+
+
+    print('Done')
+

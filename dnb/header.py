@@ -32,7 +32,7 @@ origin_comp_file = ['dnb_pa.csv', 'dnb_sf.csv', 'dnb_sj.csv', 'dnb_Los_Angeles.c
 inventory_file = 'inventory_bom.csv'
 compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
 compstak_dnb_match_file = 'compstak_dnb_v2.csv'
-
+salesforce_dnb_file = 'salesforce_comp_city_from_opp.csv'
 
 kwargs_key = 'task_instance'
 

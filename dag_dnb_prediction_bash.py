@@ -14,6 +14,7 @@ import os,sys
 sys.path.insert(0,os.path.abspath(os.path.dirname(__file__)))
 
 from dnb.header import *
+import dnb.dnb_atlas_match_lib as dnblib
 import datetime
 
 args = {
@@ -47,7 +48,7 @@ bash_cmd = 'cd %s && python3 -u %s ' \
                     '--apps %s ' \
                     '--dbname %s ' \
                     '--data_path %s ' \
-                    '--mode predict --batch-size 1 ' \
+                    '--mode predict --batch-size 1 --airflow ' \
            % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath)
 print('bash_cmd: >> %s' % bash_cmd)
 
@@ -56,6 +57,20 @@ exe_op = BashOperator(
     bash_command=bash_cmd,
     dag=dag,
 )
+
+
+task_data_id = 'dnb_produce_prediction_pair'
+pair_file = '%s_ww_loc_x_duns.csv'
+data_op = PythonOperator(
+    task_id = task_data_id,
+    python_callable = dnblib.prod_prediction_pair,
+    op_kwargs = {
+        'save_filename':pair_file,
+    },
+    dag = dag,
+)
+
+data_op >> exe_op
 
 
 

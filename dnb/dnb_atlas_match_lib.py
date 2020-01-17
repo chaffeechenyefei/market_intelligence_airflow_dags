@@ -49,7 +49,8 @@ def fuzzy_geosearchv2(datComp, datLoc, precision=5, thresh=500):
     :return: 
     """
     print('Initial company num:', len(datComp))
-    datLoc_city = cityfilter(datComp, datLoc)
+    #datLoc_city = cityfilter(datComp, datLoc)
+    datLoc_city = city_state_filter(datComp, datLoc)
     print(len(datComp), len(datLoc_city))
     datComp_city = datComp[['duns_number', 'longitude', 'latitude']]
     datLoc_city = datLoc_city[['atlas_location_uuid', 'longitude', 'latitude']]
@@ -64,6 +65,14 @@ def cityfilter(datComp, datLoc):
     city = datComp.groupby(['physical_city'], as_index=False)['physical_city'].agg({'cnt': 'count'})
     print(len(city))
     pdatLoc = pd.merge(datLoc, city, how='inner', left_on=['city'], right_on=['physical_city'],
+                       suffixes=['_loc', '_comp']).reset_index(drop=True)
+    return pdatLoc
+
+def city_state_filter(datComp, datLoc):
+    datComp['state'] = datComp['msa'].apply(lambda x: x.split(',')[-1].strip() )
+    city = datComp.groupby(['physical_city','state'], as_index=False).first()[['physical_city','state']]
+    print(len(city))
+    pdatLoc = pd.merge(datLoc, city, how='inner', left_on=['city','state'], right_on=['physical_city','state'],
                        suffixes=['_loc', '_comp']).reset_index(drop=True)
     return pdatLoc
 

@@ -64,7 +64,7 @@ bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
                              '--run_root %s ' \
                              '--apps %s ' \
                              '--dbname %s ' \
-                             '--ww' \
+                             '--ww ' \
                              '--maxK 150 ' \
                     %(program_path, embedding_exe, datapath , model, run_root,apps,dbname )
 print('bash_cmd_produce_embedding: >> %s'% bash_cmd_produce_embedding)

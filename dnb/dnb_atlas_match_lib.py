@@ -373,7 +373,7 @@ def prod_prediction_pair(**op_kwargs):
     print('Loading dnb account within salesforce')
     pdc_all = pd.read_csv(pjoin(datapath_mid, salesforce_dnb_file))[[cid, 'city']]
     print('Loading location which has been embedded')
-    loc_emb_feat_name = 'location_feat_emb_' + hdargs["dnb_dnn_cmd"]["model"]
+    loc_emb_feat_name = 'location_feat_emb_' + hdargs["dnb_dnn_cmd"]["model"] + '.csv'
     loc_ww = pd.read_csv(pj(datapath_mid,loc_emb_feat_name),index_col=0)
 
     for ind_city, str_city in enumerate(cityname):

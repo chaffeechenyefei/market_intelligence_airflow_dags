@@ -39,9 +39,9 @@ model = hdargs["dnb_dnn_cmd"]["model"]
 lr = hdargs["dnb_dnn_cmd"]["lr"]
 apps = hdargs["apps"]
 dbname = dnbdbname
-data_path = hdargs["run_root"]
 
-bash_cmd = 'cd %s && python3 -u %s ' \
+
+bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--run_root %s ' \
                     '--model %s ' \
                     '--lr %1.4f ' \
@@ -50,12 +50,28 @@ bash_cmd = 'cd %s && python3 -u %s ' \
                     '--data_path %s ' \
                     '--mode predict --batch-size 1 --airflow ' \
            % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath)
-print('bash_cmd: >> %s' % bash_cmd)
-
+print('bash_cmd_predict: >> %s' % bash_cmd_predict)
 exe_op = BashOperator(
     task_id='dnb_prediction',
-    bash_command=bash_cmd,
+    bash_command=bash_cmd_predict,
     dag=dag,
+)
+
+embedding_exe = hdargs["dnb_dnn_embedding_exe"]
+bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
+                             '--path %s ' \
+                             '--model %s ' \
+                             '--run_root %s ' \
+                             '--apps %s ' \
+                             '--dbname %s ' \
+                             '--ww' \
+                             '--maxK 150 ' \
+                    %(program_path, embedding_exe, datapath , model, run_root,apps,dbname )
+print('bash_cmd_produce_embedding: >> %s'% bash_cmd_produce_embedding)
+emb_op = BashOperator(
+    task_id = 'dnb_produce_embedding',
+    bash_command = bash_cmd_produce_embedding,
+    dag = dag,
 )
 
 
@@ -63,14 +79,14 @@ task_data_id = 'dnb_produce_prediction_pair'
 pair_file = '%s_ww_loc_x_duns.csv'
 data_op = PythonOperator(
     task_id = task_data_id,
-    python_callable = dnblib.prod_prediction_pair,
+    python_callable = dnblib.prod_prediction_pair, #depends on embedding file
     op_kwargs = {
         'save_filename':pair_file,
     },
     dag = dag,
 )
 
-data_op >> exe_op
+emb_op >> data_op >> exe_op
 
 
 

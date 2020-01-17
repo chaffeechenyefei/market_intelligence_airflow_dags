@@ -370,25 +370,21 @@ Produce prediction file
 """
 def prod_prediction_pair(**op_kwargs):
     save_filename = op_kwargs['save_filename']
+    print('Loading dnb account within salesforce')
     pdc_all = pd.read_csv(pjoin(datapath_mid, salesforce_dnb_file))[[cid, 'city']]
+    print('Loading location which has been embedded')
+    loc_emb_feat_name = 'location_feat_emb_' + hdargs["dnb_dnn_cmd"]["model"]
+    loc_ww = pd.read_csv(pj(datapath_mid,loc_emb_feat_name),index_col=0)
+
     for ind_city, str_city in enumerate(cityname):
-        pdcl = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))[[bid, cid]]
+        # pdcl = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))[[bid, cid]]
         pdc = pdc_all.loc[pdc_all['city'] == str_city]
         tot_comp = len(pdc)
         print('Total %d company found in %s from salesforce' % (tot_comp, str_city))
         pdc[bid] = 'a'
         # in case of multi-mapping
-        all_loc_name = pdcl[[bid]].groupby([bid])[
-            [bid]].first().reset_index(drop=True)
-        print('Total %d locations have companies inside.' % len(all_loc_name))
 
-        loc_feat = pd.read_csv(pjoin(datapath, lfile))[[bid, 'is_wework']]
-        loc_ww = loc_feat.loc[loc_feat['is_wework'] == True]
-        print('Total %d locations inside ls card belonged to ww.' % len(loc_ww))
-        all_loc_name = \
-            all_loc_name.merge(loc_ww, on=bid, how='inner', suffixes=['', '_right'])[
-                [bid]]
-
+        all_loc_name = loc_ww.loc[loc_ww['city']==str_city][[bid]]
         tot_loc = len(all_loc_name)
         print('Total %d locations belonged to ww in %s' % (tot_loc, str_city))
 

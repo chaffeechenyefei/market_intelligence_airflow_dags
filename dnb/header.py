@@ -84,6 +84,7 @@ hdargs = {
         "model":"location_recommend_region_model_v5",
         "lr":0.01,
     },
+    "dnb_dnn_embedding_exe":"get_embedding_feature_region.py",
 }
 
 

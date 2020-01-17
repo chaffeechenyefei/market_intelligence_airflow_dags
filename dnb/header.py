@@ -92,8 +92,10 @@ datapath = hdargs['run_root']
 TEST_FLG = hdargs["test"]
 if TEST_FLG:
     datapath_mid = pj(datapath, hdargs["test_db"])
+    dnbdbname = hdargs["test_db"]
 else:
     datapath_mid = pj(datapath, hdargs["dev_db"])
+    dnbdbname = hdargs["dev_db"]
 
 clfile = [c + hdargs['apps'] for c in cityabbr]
 ssfile = ['all_ww_' + c.replace(hdargs['apps'], '') + '_similarity' + hdargs['apps'] for c in clfile]

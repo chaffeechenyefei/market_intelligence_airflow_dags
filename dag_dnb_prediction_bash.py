@@ -37,9 +37,12 @@ run_root = hdargs["dnb_dnn_cmd"]["run_root"]
 model = hdargs["dnb_dnn_cmd"]["model"]
 lr = hdargs["dnb_dnn_cmd"]["lr"]
 apps = hdargs["apps"]
+dbname = dnbdbname
+data_path = hdargs["run_root"]
 
 
-bash_cmd = 'cd %s && python3 %s --run_root %s --model %s --lr %1.4f --apps %s --mode predict --batch-size 1'%(program_path,prediction_exe,run_root,model,lr,apps)
+bash_cmd = 'cd %s && python3 %s --run_root %s --model %s --lr %1.4f --apps %s --db_name %s --data_path %s --mode predict --batch-size 1 '\
+           %(program_path,prediction_exe,run_root,model,lr,apps,dbname,datapath)
 print('bash_cmd: >> %s'%bash_cmd)
 
 exe_op = BashOperator(

@@ -16,7 +16,6 @@ sys.path.insert(0,os.path.abspath(os.path.dirname(__file__)))
 
 from dnb.header import *
 from dnb.utils import *
-from dnb.reason_generator import reason_similar_biz
 
 # sfx = ['', '_right']
 # cid = 'duns_number'

@@ -111,6 +111,6 @@ for ind_city in range(len(cfile)):
         dag = dag,
     )
 
-    load_op >> exe_op
+    load_op >> exe_op >> trigger_op
 
 

@@ -1,5 +1,6 @@
 from dnb.header import *
 from dnb.utils import *
+import dnb.data_loader as data_loader
 
 sfx = ['','_right']
 
@@ -195,6 +196,24 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name ,var_task_spa
                                               inv_col='max_reservable_capacity', reason_col=sub_reason_col_name)
     print('==> Coverage: %1.2f' % (len(sub_inventory_db) / total_pairs_num))
     sub_inventory_db.to_csv(sub_reason_file)
+
+def reason_talent_score(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
+    print('Talent score')
+    ti = context.get("ti")
+    sspd = get_xcom_var(ti, var_task_space, 'sspd')
+
+    total_pairs_num = len(sspd)
+    sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
+
+    dataloadCls = data_loader.data_process(root_path=hdargs["run_root"])
+    talentdb = dataloadCls.load_talent()
+    lscard = dataloadCls.load_location_scorecard_msa()
+
+    recall_com = sub_rec_talent(talentdb=talentdb,lsdb=lscard,reason='Talent score here is %s.')
+    sub_talent_db = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name)
+
+    print('==> Coverage: %1.2f' % (len(sub_talent_db) / total_pairs_num))
+    sub_talent_db.to_csv(sub_reason_file)
 
 
 def reason_compstak(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):

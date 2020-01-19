@@ -1130,3 +1130,43 @@ class sub_rec_compstak(object):
 
         clpair = clpair.merge(self.db[[cid, reason_col]], on=cid, suffixes=sfx)
         return clpair[[cid, bid, reason_col]]
+
+
+class sub_rec_talent(object):
+    def __init__(self, talentdb, lsdb, reason='Talent score here is %s.',
+                 bid='altas_location_uuid',
+                 cid='duns_number'):
+        self.bid = bid
+        self.cid = cid
+        self.reason = reason
+
+        self.db = talentdb
+        self.lscard = lsdb
+
+    def get_reason(self, sspd, reason_col='talent'):
+        sfx = ['', '_right']
+        taldb = self.db
+        bid = self.bid
+        cid = self.cid
+        talent_score = 'talent_index'
+        city_col = 'city'
+        state_col = 'state'
+
+        def trans_score(x):
+            x = int(x)
+            phs = ''
+            if x >= 5:
+                phs = 'at the top of the country'
+            elif x >= 4:
+                phs = 'high'
+            elif x >= 3:
+                phs = 'equal to the average level'
+            else:
+                phs = 'a bit low'
+            return phs
+
+        taldb[reason_col] = taldb[talent_score].apply(lambda x: (self.reason % trans_score(x)) )
+        sspd = sspd.merge(self.lscard, on=bid, suffixes=sfx)
+        sspd = sspd.merge(taldb, on=[city_col, state_col], suffixes=sfx)
+
+        return sspd[[cid, bid, reason_col]]

@@ -58,7 +58,9 @@ hdargs = {
         "reason_inventory_bom":
             {"p": 3, "useFLG": 1},
         "reason_compstak":
-            {"p": 4, "useFLG": 1}
+            {"p": 4, "useFLG": 1},
+        "reason_talent_score":
+            {"p":9, "useFLG":1 },
     },
     "cid":"duns_number",
     "bid":"atlas_location_uuid",

@@ -70,7 +70,7 @@ hdargs = {
 
     "test_db":"tmp_table",
     "dev_db":"reason_table",
-    "test":1, #whether using test_db(space/folder) or dev_db
+    "test":0, #whether using test_db(space/folder) or dev_db
 
     "do_data_split":1, #whether doing data split
     "ratio_data_split":0.9,

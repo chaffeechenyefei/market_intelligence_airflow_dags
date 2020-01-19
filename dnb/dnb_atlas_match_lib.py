@@ -17,9 +17,54 @@ def get_xcom_var(ti, task_id, key):
 def data_load(ls_card, **context):
     ti = context.get("ti")
     print('==> Loading location scorecard:%s'%ls_card)
-    pdl = pd.read_csv(pj(datapath, ls_card))
+    pdl = pd.read_csv(pj(datapath, ls_card),index_col=0)
     set_xcom_var(ti, key='ls_card', value=pdl)
     print('Done')
+
+def data_load_ww_geohash(ls_card, precision,**context):
+    ti = context.get("ti")
+    print('==> Loading location scorecard:%s'%ls_card)
+    pdl = pd.read_csv(pj(datapath, ls_card),index_col=0)
+    pdl = pdl.loc[pdl['is_wework']==True]
+    geohash(pdl,precision=precision)
+    set_xcom_var(ti, key='ls_card', value=pdl)
+    print('Done')
+
+
+def prod_dnb_city_name_list(**op_kwargs):
+    data_path = op_kwargs['data_path']
+    dbname = op_kwargs['dbname']
+    apps = op_kwargs['apps']
+
+    dnb_path = pj(data_path,dbname)
+
+    filelist = os.listdir(dnb_path)
+    filelist = [c for c in filelist if c.split('.')[-1] in ['csv']]
+
+    dbs = []
+    for file in filelist:
+        city_name = file.replace('.csv', '').replace('dnb_', '')
+        db = pd.read_csv(pj(dnb_path, file), index_col=0)
+        db = db[['msa', 'physical_city']]
+        print('==> %s size: %d' % (city_name, len(db)))
+        if len(db) == 0:
+            continue
+        db = db.groupby(['msa', 'physical_city']).first().reset_index()
+        db['filename'] = file
+        db['same'] = db['physical_city'].apply(lambda x: True if x == city_name else False)
+        db['short_name'] = db['physical_city'].apply(lambda x: x.replace(' ', '_'))
+        dbs.append(db)
+
+    dbs = pd.concat(dbs, axis=0)
+
+    same_dbs = dbs.loc[dbs['same']==True]
+    print('Err:%d' % len(dbs.loc[dbs['same'] == False]))
+    dbs.to_csv(pj(datapath_mid, 'dnb_msa_city_list'+apps))
+
+    same_dbs = same_dbs.groupby(['physical_city','filename','short_name']).first().reset_index()[['physical_city','filename','short_name']]
+    same_dbs.to_csv(pj(datapath_mid,'dnb_city_list'+apps))
+    print('Done')
+
 
 
 
@@ -34,6 +79,26 @@ def dnb_atlas_match(cfile,clfile,precision,dist_thresh,**context):
     pdc = pd.read_csv(pj(datapath, cfile))
 
     linkCL = fuzzy_geosearchv2(pdc, pdl, precision=precision, thresh=dist_thresh)
+
+    linkCL.to_csv(pj(datapath_mid, outfile), index=None, header=True)
+    print('Done')
+
+
+def dnb_atlas_match_ww(cfile,clfile,precision,dist_thresh,**context):
+    """
+    This function only get pairs of Dnb and ww location. Thus, it is safe for predition only.
+     All the locations can be used to compare because DnB data is a bit dirty.
+    """
+    ti = context.get("ti")
+
+    print('==> Reading location scorecard')
+    pdl = get_xcom_var(ti,task_id=context['var_task_space'],key='ls_card')
+
+    outfile = clfile
+    print('==> DnB Atlas matching for%s'%cfile)
+    pdc = pd.read_csv(pj(datapath, cfile))
+
+    linkCL = fuzzy_geosearchv3(pdc, pdl, precision=precision, thresh=dist_thresh)
 
     linkCL.to_csv(pj(datapath_mid, outfile), index=None, header=True)
     print('Done')
@@ -61,8 +126,25 @@ def fuzzy_geosearchv2(datComp, datLoc, precision=5, thresh=500):
 
     return linkCL
 
+def fuzzy_geosearchv3(datComp, datLoc, precision=5, thresh=500):
+    """
+    Same as fuzzy_geosearchv2, except:
+    No city filtering, because only wework locations are used. The number of location is smaller.
+    """
+    print('Initial company num:', len(datComp))
+    datLoc_city = datLoc
+    print(len(datComp), len(datLoc_city))
+    datComp_city = datComp[['duns_number', 'longitude', 'latitude']]
+    datLoc_city = datLoc_city[['atlas_location_uuid', 'longitude', 'latitude']]
+
+    geohash(datComp_city, precision)
+    geohash(datLoc_city, precision)
+    linkCL = calcLinkTablev2(datComp_city, datLoc_city, dist_thresh=thresh)
+
+    return linkCL
+
 def cityfilter(datComp, datLoc):
-    city = datComp.groupby(['physical_city'], as_index=False)['physical_city'].agg({'cnt': 'count'})
+    city = datComp.groupby(['physical_city']).first().reset_index()['physical_city']
     print(len(city))
     pdatLoc = pd.merge(datLoc, city, how='inner', left_on=['city'], right_on=['physical_city'],
                        suffixes=['_loc', '_comp']).reset_index(drop=True)
@@ -70,7 +152,7 @@ def cityfilter(datComp, datLoc):
 
 def city_state_filter(datComp, datLoc):
     datComp['state'] = datComp['msa'].apply(lambda x: x.split(',')[-1].strip() )
-    city = datComp.groupby(['physical_city','state'], as_index=False).first()[['physical_city','state']]
+    city = datComp.groupby(['physical_city','state']).first().reset_index()[['physical_city','state']]
     print(len(city))
     pdatLoc = pd.merge(datLoc, city, how='inner', left_on=['city','state'], right_on=['physical_city','state'],
                        suffixes=['_loc', '_comp']).reset_index(drop=True)

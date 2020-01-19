@@ -150,3 +150,18 @@ class data_process(object):
         if not self.sil:
             print('%d location scorecard for msa loaded' % len(lsdat))
         return lsdat
+
+    def load_dnb_city_lst(self, db='reason_table', table='dnb_city_list_200106.csv'):
+        db_path = pj(self.root_path, db)
+        dnb_city_lst = pd.read_csv(pj(db_path, table), index_col=0)
+
+        citylongname = list(dnb_city_lst['physical_city'].values)
+        cityabbr = list(dnb_city_lst['short_name'].values)
+        origin_comp_file = list(dnb_city_lst['filename'].values)
+
+        return {
+            "citylongname":citylongname,
+            "cityabbr":cityabbr,
+            "origin_comp_file":origin_comp_file,
+        }
+

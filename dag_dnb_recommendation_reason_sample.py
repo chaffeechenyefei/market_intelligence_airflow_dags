@@ -43,7 +43,7 @@ task_reason_similar_biz_op = BranchPythonOperator(
 task_gen_reason_similar_biz_op = PythonOperator(
     task_id = 'task_gen_reason_similar_biz',
     provide_context=False,
-    python_callable = print('Hello'),
+    python_callable = lambda:print('Hello'),
     dag = dag,
 )
 

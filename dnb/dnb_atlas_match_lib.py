@@ -131,10 +131,11 @@ def fuzzy_geosearchv2(datComp, datLoc, precision=5, thresh=500):
 def fuzzy_geosearchv3(datComp, datLoc, precision=5, thresh=500):
     """
     Same as fuzzy_geosearchv2, except:
-    No city filtering, because only wework locations are used. The number of location is smaller.
+    city filtering still added.
     """
     print('Initial company num:', len(datComp))
-    datLoc_city = datLoc
+    # datLoc_city = datLoc
+    datLoc_city = cityfilter(datComp, datLoc)
     print(len(datComp), len(datLoc_city))
     datComp_city = datComp[['duns_number', 'longitude', 'latitude']]
     datLoc_city = datLoc_city[['atlas_location_uuid', 'longitude', 'latitude']]

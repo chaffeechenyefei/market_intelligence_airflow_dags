@@ -67,7 +67,7 @@ task_load = 'task_data_load_ww'
 load_op = PythonOperator(
     task_id = task_load,
     provide_context = True,
-    python_callable = dnblib.data_load_ww_geohash,
+    python_callable = dnblib.data_load_geohash, #dnblib.data_load_ww_geohash,
     op_kwargs = {
         'ls_card':hdargs["ls_card"],
         'precision':precision,
@@ -75,7 +75,7 @@ load_op = PythonOperator(
     dag = dag,
 )
 
-dataloader = data_process(root_path=hdargs["run_root"])
+# dataloader = data_process(root_path=hdargs["run_root"])
 table_name = 'dnb_city_list%s'%apps
 # dnb_city_file_lst = dataloader.load_dnb_city_lst(db=dnbdbname,table=table_name)
 #

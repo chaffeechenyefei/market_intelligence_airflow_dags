@@ -32,6 +32,15 @@ def data_load_ww_geohash(ls_card, precision,**context):
     print('Done')
 
 
+def data_load_geohash(ls_card, precision, **context):
+    ti = context.get("ti")
+    print('==> Loading location scorecard:%s' % ls_card)
+    pdl = pd.read_csv(pj(datapath, ls_card), index_col=0)
+    geohash(pdl, precision=precision)
+    set_xcom_var(ti, key='ls_card', value=pdl)
+    print('Done')
+
+
 def prod_dnb_city_name_list(**op_kwargs):
     data_path = op_kwargs['data_path']
     dbname = op_kwargs['dbname']

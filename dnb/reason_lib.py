@@ -103,7 +103,7 @@ def data_prepare(ind_city,**context):
         set_xcom_var(ti, key='skp_FLG', value=True)
         return
     else:
-        pass
+        set_xcom_var(ti, key='skp_FLG', value=False)
 
     print('##city: %s processing##' % citylongname[ind_city])
     comp_feat = pd.read_csv(pjoin(datapath, cfile[ind_city]))

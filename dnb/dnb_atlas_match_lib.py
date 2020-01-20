@@ -473,6 +473,9 @@ def prod_prediction_pair(**op_kwargs):
         # pdcl = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))[[bid, cid]]
         pdc = pdc_all.loc[pdc_all['city'] == str_city]
         tot_comp = len(pdc)
+        if tot_comp == 0:
+            continue
+
         print('Total %d company found in %s from salesforce' % (tot_comp, str_city))
         pdc[bid] = 'a'
         # in case of multi-mapping

@@ -32,6 +32,13 @@ class data_process(object):
             'state': 'state',
             'talent_score': 'talent_index',  # 5-1
         }
+        self.ls_col = {
+            'city':'city',
+            'state':'state',
+            'lat':'latitude',
+            'lng':'longitude',
+            'bid':'atlas_location_uuid',
+        }
 
         self.sil = silence
         self.demand_dat = 'salesforce demand signal'

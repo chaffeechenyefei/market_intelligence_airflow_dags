@@ -47,6 +47,11 @@ def data_merge_for_all_cities():
 
 def data_merge_for_city(city_reason_file_name,sub_reason_file_names,reason_names, var_task_space,**context):
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
+
     print('Merging reasons')
     sample_sspd = get_xcom_var(ti,var_task_space,'sspd')
 
@@ -88,9 +93,21 @@ def data_merge_for_city(city_reason_file_name,sub_reason_file_names,reason_names
 
 
 def data_prepare(ind_city,**context):
+    ti = context.get("ti")
+    """
+    Assert whether should prod the city first
+    Use prediction score file as criterion
+    """
+    sspd_file = pjoin(datapath_mid, ssfile[ind_city])
+    if not os.path.isfile(sspd_file):
+        set_xcom_var(ti, key='skp_FLG', value=True)
+        return
+    else:
+        pass
+
     print('##city: %s processing##' % citylongname[ind_city])
     comp_feat = pd.read_csv(pjoin(datapath, cfile[ind_city]))
-    comp_loc = pd.read_csv(pjoin(datapath, clfile[ind_city]))
+    comp_loc = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))
     loc_feat = pd.read_csv(pjoin(datapath, lfile))
     loc_feat = loc_feat.merge(comp_loc[[bid]].groupby(bid).first().reset_index(),
                               on=bid, suffixes=sfx)
@@ -99,11 +116,12 @@ def data_prepare(ind_city,**context):
     sub_loc_feat = global_ft.city_filter(city_name=cityname[ind_city]).end()
 
     sub_loc_feat_ww = sub_loc_feat.loc[sub_loc_feat['is_wework'] == True, :]
+    # sub_comp_loc: company-location pair where location should belongs to ww
     sub_comp_loc = pd.merge(comp_loc, sub_loc_feat_ww[[bid]], on=bid,
                             suffixes=sfx)  # multi comp loc
     print('==> %d locations inside the city' % len(sub_loc_feat_ww))
 
-    sspd = pd.read_csv(pjoin(datapath, ssfile[ind_city]), index_col=0)
+    sspd = pd.read_csv(pjoin(datapath_mid, ssfile[ind_city]), index_col=0)
     total_pairs_num = len(sspd)
     print('==> %d pairs of recommendation score'%total_pairs_num)
 
@@ -113,13 +131,13 @@ def data_prepare(ind_city,**context):
     compstak_dnb_city = compstak_dnb.loc[compstak_dnb['city'] == cityname[ind_city], :]
     print('==> %d compstak_db loaded'%len(compstak_db_city))
 
-    comp_feat_normed = pd.read_csv(pjoin(datapath, comp_feat_file), index_col=0)
-    loc_feat_normed = pd.read_csv(pjoin(datapath, loc_feat_file), index_col=0)
+    comp_feat_normed = pd.read_csv(pjoin(datapath_mid, comp_feat_file), index_col=0)
+    loc_feat_normed = pd.read_csv(pjoin(datapath_mid, loc_feat_file), index_col=0)
     print('==> normalized feature loaded')
 
     dlsub_ssfile_db = dlsub_ssfile[ind_city]
 
-    ti = context.get("ti")
+
     set_xcom_var(ti, key='comp_feat', value=comp_feat)
     set_xcom_var(ti, key='comp_loc', value=comp_loc)
     set_xcom_var(ti, key='loc_feat', value=loc_feat)
@@ -139,6 +157,11 @@ def data_prepare(ind_city,**context):
 def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Is there a company with similar biz inside the location?')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
+
     sspd = get_xcom_var(ti,var_task_space,'sspd')
     comp_feat = get_xcom_var(ti,var_task_space,'comp_feat')
     sub_comp_loc = get_xcom_var(ti, var_task_space, 'sub_comp_loc')
@@ -155,7 +178,7 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,var_task_spac
                                           bid=bid, cid=cid, cname='business_name')
 
     sub_pairs = recall_com.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
-                                                                    reason='This location has a tenant company(%s) which is in the same industry as your company.')
+                                                                    reason='This location has a tenant company(%s) which is in the same industry(%s) as your company.')
     # explanar
     print('==> Coverage: %1.2f' % (len(sub_pairs) / total_pairs_num))
     sub_pairs.to_csv(sub_reason_file)
@@ -164,6 +187,10 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,var_task_spac
 def reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Close to current location')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sspd = get_xcom_var(ti,var_task_space,'sspd')
     comp_feat = get_xcom_var(ti,var_task_space,'comp_feat')
     loc_feat = get_xcom_var(ti,var_task_space,'loc_feat')
@@ -171,8 +198,8 @@ def reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name ,v
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
-    recall_com6 = sub_rec_location_distance(reason_col_name=sub_reason_col_name)
-    sub_close_loc = recall_com6.get_reason(sspd=sspd, loc_feat=loc_feat, comp_feat=comp_feat, dist_thresh=3.2e3)
+    recall_com = sub_rec_location_distance(reason_col_name=sub_reason_col_name)
+    sub_close_loc = recall_com.get_reason(sspd=sspd, loc_feat=loc_feat, comp_feat=comp_feat, dist_thresh=3.2e3)
 
     print('==> Coverage: %1.2f' % (len(sub_close_loc) / total_pairs_num))
     sub_close_loc.to_csv(sub_reason_file)
@@ -181,6 +208,10 @@ def reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name ,v
 def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Inventory bom')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sspd = get_xcom_var(ti,var_task_space,'sspd')
     comp_feat = get_xcom_var(ti,var_task_space,'comp_feat')
 
@@ -190,7 +221,7 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name ,var_task_spa
     invdb = pd.read_csv(pjoin(datapath, inventory_file))
 
     recall_com = sub_rec_inventory_bom(invdb=invdb,
-                                        reason='Inventory reason: The available space of this location can hold your company.',
+                                        reason='Inventory reason: The max reservable desks( %d ) of this location can hold your company.',
                                         bid=bid, cid=cid)
     sub_inventory_db = recall_com.get_reason(sspd=sspd, comp_feat=comp_feat, comp_col='emp_here',
                                               inv_col='max_reservable_capacity', reason_col=sub_reason_col_name)
@@ -200,6 +231,10 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name ,var_task_spa
 def reason_talent_score(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Talent score')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sspd = get_xcom_var(ti, var_task_space, 'sspd')
 
     total_pairs_num = len(sspd)
@@ -219,6 +254,10 @@ def reason_talent_score(sub_reason_col_name, sub_reason_file_name ,var_task_spac
 def reason_compstak(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Compstak')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sspd = get_xcom_var(ti, var_task_space, 'sspd')
     compstak_db_city = get_xcom_var(ti, var_task_space, 'compstak_db_city')
     compstak_dnb_city = get_xcom_var(ti, var_task_space, 'compstak_dnb_city')
@@ -237,10 +276,14 @@ def reason_compstak(sub_reason_col_name, sub_reason_file_name ,var_task_space, *
 def reason_similar_company(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Is there a similar company inside the recommended location?')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sspd = get_xcom_var(ti, var_task_space, 'sspd')
     comp_feat = get_xcom_var(ti, var_task_space, 'comp_feat')
     sub_comp_loc = get_xcom_var(ti, var_task_space,'sub_comp_loc')
-    comp_loc = get_xcom_var(ti, var_task_space, 'comp_loc')
+    # comp_loc = get_xcom_var(ti, var_task_space, 'comp_loc')
     comp_feat_normed = get_xcom_var(ti, var_task_space, 'comp_feat_normed')
 
     comp_feat_col = [c for c in comp_feat_normed.columns if c not in [cid, bid]]
@@ -259,7 +302,11 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name ,var_task_s
     # explanar
     sub_sspd = sspd.merge(sub_sspd[[cid, bid]], on=[cid, bid], suffixes=sfx)
     print('Shrinkage ratio: %1.2f' % (len(sub_sspd) / len(sspd)))
-    recall_com = sub_rec_similar_company_v2(comp_loc=comp_loc, sspd=sub_sspd, thresh=0.05)
+    """
+    Note: comp_loc is used as grd truth for a location to find what kind of companies are inside
+    In this case, only wework locations are considered. Thus, no need to use the huge comp_loc relationship.
+    """
+    recall_com = sub_rec_similar_company_v2(comp_loc=sub_comp_loc, sspd=sub_sspd, thresh=0.05)
     sim_comp_name = recall_com.get_reason_batch(comp_feat=comp_feat, comp_feat_col=comp_feat_col,
                                                  comp_feat_normed=comp_feat_normed,
                                                  reason_col_name=sub_reason_col_name, batch_size=5000)
@@ -270,6 +317,10 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name ,var_task_s
 def reason_similar_location(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Is the recommended location similar with its current one?')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sspd = get_xcom_var(ti, var_task_space, 'sspd')
     comp_loc = get_xcom_var(ti, var_task_space, 'comp_loc')
     loc_feat = get_xcom_var(ti, var_task_space, 'loc_feat')
@@ -291,6 +342,10 @@ def reason_similar_location(sub_reason_col_name, sub_reason_file_name ,var_task_
 def reason_location_based(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('How is region?(Location based reason)')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     sub_loc_feat = get_xcom_var(ti, var_task_space, 'sub_loc_feat')
     sub_loc_feat_ww = get_xcom_var(ti, var_task_space, 'sub_loc_feat_ww')
 
@@ -325,6 +380,10 @@ def reason_location_based(sub_reason_col_name, sub_reason_file_name ,var_task_sp
 def reason_model_based(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Model based Reason(Implicit reason)')
     ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
     dlsub_ssfile_db_name = get_xcom_var(ti,var_task_space, 'dlsub_ssfile_db')
     total_pairs_num = get_xcom_var(ti, var_task_space, 'total_pairs_num')
 

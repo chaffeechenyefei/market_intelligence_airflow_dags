@@ -86,7 +86,8 @@ def getPosNegdatv2_fast(dat):
     # res_dat = res_dat.groupby(['duns_number', 'atlas_location_uuid'])['label'].max().reset_index()
     return res_dat
 
-def getPosNegdatv2_fast_general(dat,colname:dict):
+
+def getPosNegdatv2_fast_general(dat, colname: dict):
     """
     dat: pos pair of data (location,company,geo,distance)
     return pos/neg pair of data, same structure of dat except one more column for label
@@ -100,19 +101,21 @@ def getPosNegdatv2_fast_general(dat,colname:dict):
     twin_dat = dat.join(shuffle_dat, how='left', lsuffix='_left', rsuffix='_right')
 
     pot_neg_datA = twin_dat[
-        [ colname['company']+'_left', colname['location'] + '_right']] \
-        .rename(columns={colname['company']+'_left': 'duns_number', colname['location'] + '_right': 'atlas_location_uuid'})
+        [colname['company'] + '_left', colname['location'] + '_right']] \
+        .rename(
+        columns={colname['company'] + '_left': 'duns_number', colname['location'] + '_right': 'atlas_location_uuid'})
 
     pot_neg_datB = twin_dat[
-        [colname['company']+'_right', colname['location'] + '_left']] \
-        .rename(columns={colname['company']+'_right': 'duns_number', colname['location'] + '_left': 'atlas_location_uuid'})
+        [colname['company'] + '_right', colname['location'] + '_left']] \
+        .rename(
+        columns={colname['company'] + '_right': 'duns_number', colname['location'] + '_left': 'atlas_location_uuid'})
 
     pot_neg_dat = pd.concat([pot_neg_datA, pot_neg_datB], axis=0)
     pot_neg_dat['label'] = 0
     dat['label'] = 1
 
     # col alignment
-    col_list = [colname['company'], colname['location'] , 'label']
+    col_list = [colname['company'], colname['location'], 'label']
     dat = dat[col_list]
     pot_neg_dat = pot_neg_dat[col_list]
 
@@ -345,18 +348,20 @@ def apply_dummy(coldict: dict, data):
 # get_sub_recommend_reason_after_similarity
 # =======================================================================================================================
 # =======================================================================================================================
-def generate_loc_type(comp_feat, comp_loc, matching_col,cid='duns_number',bid='atlas_location_uuid',cname='business_name'):
+def generate_loc_type(comp_feat, comp_loc, matching_col, cid='duns_number', bid='atlas_location_uuid',
+                      cname='business_name'):
     # matching_col = 'major_industry_category'
-    comp_type = comp_feat[[cid, matching_col,cname]].dropna()
+    comp_type = comp_feat[[cid, matching_col, cname]].dropna()
     comp_type_location = pd.merge(comp_type, comp_loc[[cid, bid]], on=cid)
 
     loc_type = comp_type_location.groupby([bid, matching_col]).first().reset_index()[
-        [bid, matching_col,cname]]
+        [bid, matching_col, cname]]
     return loc_type
 
 
 class sub_rec_similar_company(object):
-    def __init__(self, comp_feat, comp_loc, matching_col, reason_col_name='reason',bid='atlas_location_uuid',cid='duns_number',cname = 'business_name'):
+    def __init__(self, comp_feat, comp_loc, matching_col, reason_col_name='reason', bid='atlas_location_uuid',
+                 cid='duns_number', cname='business_name'):
         """
         comp_feat: original company information
         comp_loc: company-location affinities of a certain city
@@ -367,7 +372,7 @@ class sub_rec_similar_company(object):
         self.comp_loc = comp_loc
         self.matching_col = matching_col
         self.reason_col_name = reason_col_name
-        self.loc_type = generate_loc_type(comp_feat, comp_loc, matching_col,cid=cid,bid=bid,cname=cname)
+        self.loc_type = generate_loc_type(comp_feat, comp_loc, matching_col, cid=cid, bid=bid, cname=cname)
         self.bid = bid
         self.cid = cid
         self.cname = cname
@@ -380,14 +385,19 @@ class sub_rec_similar_company(object):
         sub_pairs[self.reason_col_name] = reason
         return sub_pairs
 
-    def get_candidate_location_for_company_fast(self, query_comp_loc, reason='similar company(%s) inside', jsFLG=False , jsKey='A'):
+    def get_candidate_location_for_company_fast(self, query_comp_loc,
+                                                reason='similar company(%s) inside with same type of industry(%s)',
+                                                jsFLG=False, jsKey='A'):
         sub_pairs = pd.merge(query_comp_loc[[self.cid, self.bid, self.matching_col]], self.loc_type,
                              on=[self.bid, self.matching_col], suffixes=['', '_right'])
         sub_pairs = sub_pairs.dropna()
         if jsFLG:
-            sub_pairs[self.reason_col_name] = sub_pairs[self.cname].apply(lambda x: json.dumps({jsKey:[(reason % str(x))]}))
+            sub_pairs[self.reason_col_name] = sub_pairs.apply(
+                lambda x: json.dumps({jsKey: [(reason % (str(x[self.cname]), str(x[self.matching_col])))]}), axis=1)
         else:
-            sub_pairs[self.reason_col_name] = sub_pairs[self.cname].apply(lambda x: reason % str(x))
+            # sub_pairs[self.reason_col_name] = sub_pairs[self.cname].apply(lambda x: reason % str(x))
+            sub_pairs[self.reason_col_name] = sub_pairs.apply(
+                lambda x: reason % (str(x[self.cname]), str(x[self.matching_col])), axis=1)
         return sub_pairs
 
 
@@ -398,9 +408,9 @@ class global_filter(object):
     def filtering(self, key_column, percentile=0.2, mode='gt'):
         val = self.loc_feat[key_column].quantile(q=percentile)
         if mode == 'gt':
-            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] >= val,:]
+            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] >= val, :]
         else:
-            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] <= val,:]
+            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] <= val, :]
 
         self.loc_feat = sub_loc.reset_index(drop=True)
         return self
@@ -412,9 +422,9 @@ class global_filter(object):
     def exfiltering(self, loc_feat, key_column, percentile=0.2, mode='gt'):
         val = loc_feat[key_column].quantile(q=percentile)
         if mode == 'gt':
-            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] >= val,:]
+            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] >= val, :]
         else:
-            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] <= val,:]
+            sub_loc = self.loc_feat.loc[self.loc_feat[key_column] <= val, :]
 
         return sub_loc.reset_index(drop=True)
 
@@ -423,7 +433,7 @@ class global_filter(object):
 
 
 class sub_rec_condition(object):
-    def __init__(self, loc_feat,bid='atlas_location_uuid'):
+    def __init__(self, loc_feat, bid='atlas_location_uuid'):
         """
         comp_loc: company-location affinities of a certain city
         cond_col = column of location used for filtering
@@ -437,7 +447,7 @@ class sub_rec_condition(object):
         self.cond_col.append(cond_col)
         val = self.loc_feat[cond_col].quantile(q=percentile)
         if max(val, 10):
-            self.loc_feat = self.loc_feat.loc[self.loc_feat[cond_col] >= val,:].reset_index(drop=True)
+            self.loc_feat = self.loc_feat.loc[self.loc_feat[cond_col] >= val, :].reset_index(drop=True)
             self.reason.append(reason)
         return self
 
@@ -445,7 +455,7 @@ class sub_rec_condition(object):
         self.cond_col.append(cond_col)
         val = self.loc_feat[cond_col].quantile(q=percentile)
         if max(val, 10):
-            sub_loc = self.loc_feat.loc[self.loc_feat[cond_col] >= val,:].reset_index(drop=True)
+            sub_loc = self.loc_feat.loc[self.loc_feat[cond_col] >= val, :].reset_index(drop=True)
         sub_loc[reason_col_name] = reason
         return sub_loc[[self.bid, reason_col_name]]
 
@@ -454,12 +464,12 @@ class sub_rec_condition(object):
 
 
 # ======================================================================================================================
-def ab(df,sep=','):
+def ab(df, sep=','):
     return sep.join(df.values)
 
 
 def merge_rec_reason_rowise(sub_pairs, group_cols: list, merge_col: str, sep=','):
-    return sub_pairs.groupby(group_cols)[merge_col].apply(ab,sep=sep).reset_index()
+    return sub_pairs.groupby(group_cols)[merge_col].apply(ab, sep=sep).reset_index()
 
 
 def merge_rec_reason_colwise(sub_pairs, cols=['reason1', 'reason2'], dst_col='reason', sep=','):
@@ -467,7 +477,7 @@ def merge_rec_reason_colwise(sub_pairs, cols=['reason1', 'reason2'], dst_col='re
     return sub_pairs
 
 
-def merge_str_2_json_rowise(row, src_cols:list, jsKey = 'reasons'):
+def merge_str_2_json_rowise(row, src_cols: list, jsKey='reasons'):
     """
     row in dataframe
     output json style string
@@ -481,8 +491,7 @@ def merge_str_2_json_rowise(row, src_cols:list, jsKey = 'reasons'):
     return json.dumps(jsRs)
 
 
-
-def merge_str_2_json_rowise_reformat(row, src_cols:list, jsKey = 'reasons',target_phss=[]):
+def merge_str_2_json_rowise_reformat(row, src_cols: list, jsKey='reasons', target_phss=[]):
     """
     row in dataframe
     output json style string
@@ -508,8 +517,6 @@ def merge_str_2_json_rowise_reformat(row, src_cols:list, jsKey = 'reasons',targe
                 nreason.append(rs)
     jsRs[jsKey] = nreason
     return json.dumps(jsRs)
-
-
 
 
 # ======================================================================================================================
@@ -550,25 +557,24 @@ class featsrc(Enum):
 
 
 class feature_translate_of_locaiton_similar_in(object):
-    def __init__(self,tail_delimiter=''):
+    def __init__(self, tail_delimiter=''):
         self.col2phs = {}
         self.init_dict()
 
         if tail_delimiter != '':
-            for key,item in self.col2phs():
+            for key, item in self.col2phs():
                 self.col2phs[key] = item + tail_delimiter
 
         self.keytuple = [key for key in self.col2phs.keys() if isinstance(key, tuple)]
 
-
     def getItem(self, gvkey):
-        #tuple matching first
+        # tuple matching first
 
         for key in self.keytuple:
             if gvkey in key:
                 return {'status': True,
-                    'key': gvkey,
-                    'item': self.col2phs[key]}
+                        'key': gvkey,
+                        'item': self.col2phs[key]}
         # precision matching
         if gvkey in self.col2phs.keys():
             return {'status': True,
@@ -576,7 +582,6 @@ class feature_translate_of_locaiton_similar_in(object):
                     'item': self.col2phs[gvkey]}
 
         return {'status': False}
-
 
     def init_dict(self):
         self.col2phs['score_predicted_eo'] = (
@@ -628,8 +633,6 @@ class feature_translate_of_locaiton_similar_in(object):
             'The business environment, especially the percentage of employees of core categories relevant to your company, in this area is similar to your current location, and will meet your business development needs')
 
 
-
-
 class feature_translate(object):
     def __init__(self):
         self.col2phs = {}
@@ -638,17 +641,17 @@ class feature_translate(object):
     def init_dict(self):
         # company
         self.col2phs['emp_here'] = (
-        featsrc.company, 'This location matches the amount of employees your company plans to hire locally')
+            featsrc.company, 'This location matches the amount of employees your company plans to hire locally')
         # self.col2phs['emp_here_range'] = (featsrc.company, 'local employee number') avoid for duplicating reason, leave it to dummy category
         self.col2phs['emp_total'] = (
-        featsrc.company, 'Companies with similar size as yours also has an office in this location')
+            featsrc.company, 'Companies with similar size as yours also has an office in this location')
         self.col2phs['sales_volume_us'] = (featsrc.company, 'This location can supply the sales volume of the company')
         self.col2phs['location_type'] = (
-        featsrc.company, 'This location can provide the office type demanded by your company')
+            featsrc.company, 'This location can provide the office type demanded by your company')
         self.col2phs['square_footage'] = (
-        featsrc.company, 'This location can match the expected square footage of your company')
+            featsrc.company, 'This location can match the expected square footage of your company')
         self.col2phs['primary_sic_2'] = (
-        featsrc.company, 'This location is good for the industry type of your business')
+            featsrc.company, 'This location is good for the industry type of your business')
         # building
         self.col2phs['score_predicted_eo'] = (featsrc.location, 'a high predicted score of economic occupancy')
         self.col2phs['building_class'] = (featsrc.location, 'a high quality of facilities')
@@ -661,7 +664,8 @@ class feature_translate(object):
         self.col2phs['num_fitness_gyms'] = (featsrc.region, 'Gym amenities is enough for your company')
         self.col2phs['population_density'] = (featsrc.region, 'Population density is suitable for your company')
         self.col2phs['pct_female_population'] = (featsrc.region, 'Gender diversity is suitable for your company')
-        self.col2phs['median_age'] = (featsrc.region, 'Age distribution of the population meets the need of your company')
+        self.col2phs['median_age'] = (
+        featsrc.region, 'Age distribution of the population meets the need of your company')
         self.col2phs['income_per_capita'] = (featsrc.region, 'Income level is adequate to your company')
         self.col2phs['pct_masters_degree'] = (featsrc.region, 'Education degree meets the need of your company')
         self.col2phs['walk_score'] = (featsrc.region, 'It is walking friendly')
@@ -741,7 +745,7 @@ class feature_translate(object):
                         #         print(comp_lst,loc_lst,region_lst)
 
         if comp_lst:  # not empty assert
-            comp_phs = self.merge_lst(comp_lst, pre_phs='', post_phs='', sep = '. ')
+            comp_phs = self.merge_lst(comp_lst, pre_phs='', post_phs='', sep='. ')
         else:
             comp_phs = ''
 
@@ -751,12 +755,12 @@ class feature_translate(object):
             loc_phs = ''
 
         if region_lst:
-            region_phs = self.merge_lst(region_lst, pre_phs='', post_phs='inside the region', sep = '. ')
+            region_phs = self.merge_lst(region_lst, pre_phs='', post_phs='inside the region', sep='. ')
         else:
             region_phs = ''
 
         # print(comp_phs,loc_phs,region_phs)
-        final_phs = self.merge_phs([comp_phs, loc_phs, region_phs],sep='. ')
+        final_phs = self.merge_phs([comp_phs, loc_phs, region_phs], sep='. ')
         if final_phs:
             return 'Implicit reason: ' + final_phs + '.'
         else:
@@ -790,11 +794,11 @@ class feature_translate(object):
                     elif phss[0] == featsrc.region:
                         region_lst.append(phss[1])
 
-        comp_phs = [phs+last_delimeter for phs in comp_lst if phs]
-        loc_phs = [ 'This location has ' + phs + last_delimeter for phs in loc_lst if phs]
-        region_phs = [ phs + ' inside the region' + last_delimeter for phs in region_lst if phs]
+        comp_phs = [phs + last_delimeter for phs in comp_lst if phs]
+        loc_phs = ['This location has ' + phs + last_delimeter for phs in loc_lst if phs]
+        region_phs = [phs + ' inside the region' + last_delimeter for phs in region_lst if phs]
 
-        final_js = {jsKey: (comp_phs+loc_phs+region_phs) }
+        final_js = {jsKey: (comp_phs + loc_phs + region_phs)}
         return final_js
 
 
@@ -809,7 +813,8 @@ class sub_rec_similar_location(object):
     In which feature, those tow locations are similar with each other.
     """
 
-    def __init__(self, cont_col_name, dummy_col_name, reason_col_name='reason',cid='duns_number',bid='atlas_location_uuid'):
+    def __init__(self, cont_col_name, dummy_col_name, reason_col_name='reason', cid='duns_number',
+                 bid='atlas_location_uuid'):
         self.cont_col_name = cont_col_name
         self.dummy_col_name = dummy_col_name
         self.reason_col_name = reason_col_name
@@ -821,10 +826,10 @@ class sub_rec_similar_location(object):
 
     def get_reason(self, sspd, comp_loc, loc_feat, reason='Location similar in: ', multi_flag=False):
         loc_comp_loc = sspd.merge(comp_loc, how='inner', on=self.cid, suffixes=['', '_grd']) \
-            [[self.bid, self.cid, self.bid+'_grd']]
+            [[self.bid, self.cid, self.bid + '_grd']]
 
         loc_comp_loc = loc_comp_loc.merge(loc_feat, on=self.bid, suffixes=['', '_pred'])
-        loc_comp_loc = loc_comp_loc.merge(loc_feat, left_on=self.bid+'_grd', right_on=self.bid,
+        loc_comp_loc = loc_comp_loc.merge(loc_feat, left_on=self.bid + '_grd', right_on=self.bid,
                                           suffixes=['', '_grd'])
 
         if self.reason_col_name not in loc_comp_loc.columns:
@@ -835,7 +840,7 @@ class sub_rec_similar_location(object):
             if ret_reason['status']:
                 ca = c + '_grd'
                 tmp = loc_comp_loc[[self.bid, self.cid, c, ca]].dropna()
-                tmp = tmp.loc[tmp[c] == tmp[ca],:]
+                tmp = tmp.loc[tmp[c] == tmp[ca], :]
 
                 tmp['reason'] = ret_reason['item'][1]
                 # tmp['reason'] = tmp['reason']
@@ -846,7 +851,7 @@ class sub_rec_similar_location(object):
             if ret_reason['status']:
                 ca = c + '_grd'
                 tmp = loc_comp_loc[[self.bid, self.cid, c, ca]].dropna()
-                tmp = tmp.loc[abs(tmp[c] - tmp[ca]) / (tmp[ca] + 1e-5) < self.threshold,:]
+                tmp = tmp.loc[abs(tmp[c] - tmp[ca]) / (tmp[ca] + 1e-5) < self.threshold, :]
                 tmp['reason'] = ret_reason['item'][1]
                 loc_comp_loc[[self.reason_col_name]] = \
                     loc_comp_loc[self.reason_col_name].str.cat(tmp['reason'], join='left', sep='|', na_rep='')
@@ -868,7 +873,7 @@ class sub_rec_similar_location(object):
             idx = loc_comp_loc.groupby([self.bid, self.cid])['cnt'].idxmax()
             loc_comp_loc = (loc_comp_loc.loc[idx]).reset_index()
 
-        loc_comp_loc = loc_comp_loc[[self.bid, self.cid , self.reason_col_name]]
+        loc_comp_loc = loc_comp_loc[[self.bid, self.cid, self.reason_col_name]]
         loc_comp_loc = loc_comp_loc[loc_comp_loc[self.reason_col_name] != '']
         loc_comp_loc[[self.reason_col_name]] = reason + loc_comp_loc[self.reason_col_name] + '.'
         return loc_comp_loc
@@ -879,41 +884,41 @@ class sub_rec_similar_company_v2(object):
     Retrieve the name of similar company inside the recommended location
     """
 
-    def __init__(self, comp_loc, sspd, thresh=0.05,cid='duns_number',bid='atlas_location_uuid'):
+    def __init__(self, comp_loc, sspd, thresh=0.05, cid='duns_number', bid='atlas_location_uuid'):
         self._gr_dat = comp_loc
         self._pred_dat = sspd
         self._sim_thresh = thresh
         self.cid = cid
         self.bid = bid
 
-    def get_reason_batch(self, comp_feat, comp_feat_col, comp_feat_normed, reason_col_name, batch_size = 10000):
+    def get_reason_batch(self, comp_feat, comp_feat_col, comp_feat_normed, reason_col_name, batch_size=10000):
         cid = self.cid
         bid = self.bid
         gr_dat = self._gr_dat
 
-        batch_iter = ceil(1.0*len(self._pred_dat)/batch_size)
+        batch_iter = ceil(1.0 * len(self._pred_dat) / batch_size)
         total_result = []
-        pbar = tqdm.tqdm(total = len(self._pred_dat))
+        pbar = tqdm.tqdm(total=len(self._pred_dat))
 
         for i in range(batch_iter):
             # print('processing %d of %d'%(i,batch_iter) )
-            bgidx = i*batch_size
-            edidx = min( (i+1)*batch_size, len(self._pred_dat) )
-            pbar.update(edidx-bgidx)
+            bgidx = i * batch_size
+            edidx = min((i + 1) * batch_size, len(self._pred_dat))
+            pbar.update(edidx - bgidx)
             pred_dat = self._pred_dat.iloc[bgidx:edidx]
 
             pred_gr_dat = pred_dat.merge(gr_dat[[bid, cid]], on=[bid],
                                          how='left', suffixes=['_prd', '_grd'])
 
             prd_comp_feat = \
-                pred_gr_dat[[cid+'_prd']].rename(columns={cid + '_prd': cid}).merge(comp_feat_normed,
-                                                                             on=cid,
-                                                                             how='left')[
+                pred_gr_dat[[cid + '_prd']].rename(columns={cid + '_prd': cid}).merge(comp_feat_normed,
+                                                                                      on=cid,
+                                                                                      how='left')[
                     comp_feat_col].to_numpy()
             grd_comp_feat = \
-                pred_gr_dat[[cid+'_grd']].rename(columns={cid + '_grd': cid}).merge(comp_feat_normed,
-                                                                             on=cid,
-                                                                             how='left')[
+                pred_gr_dat[[cid + '_grd']].rename(columns={cid + '_grd': cid}).merge(comp_feat_normed,
+                                                                                      on=cid,
+                                                                                      how='left')[
                     comp_feat_col].to_numpy()
 
             prd_comp_feat = normalize(prd_comp_feat, axis=1)
@@ -922,19 +927,19 @@ class sub_rec_similar_company_v2(object):
 
             distpd = pd.DataFrame(dist, columns=['dist'])
 
-            pred_gr_dat2 = pd.concat([pred_gr_dat[[bid, cid+'_prd', cid+'_grd']], distpd],
+            pred_gr_dat2 = pd.concat([pred_gr_dat[[bid, cid + '_prd', cid + '_grd']], distpd],
                                      axis=1)
             pred_gr_dat2.loc[pred_gr_dat2['dist'] < 1e-12, 'dist'] = 1
             result = pred_gr_dat2.loc[
-                pred_gr_dat2.groupby([bid, cid+'_prd'])['dist'].idxmin()].reset_index(drop=True)
+                pred_gr_dat2.groupby([bid, cid + '_prd'])['dist'].idxmin()].reset_index(drop=True)
 
-            result = result.loc[result['dist'] <= self._sim_thresh,:]
+            result = result.loc[result['dist'] <= self._sim_thresh, :]
 
             result = \
-                result.merge(comp_feat[[cid, 'business_name']], left_on=cid+'_grd', right_on=cid,
+                result.merge(comp_feat[[cid, 'business_name']], left_on=cid + '_grd', right_on=cid,
                              how='left',
-                             suffixes=['', '_useless'])[[bid, cid+'_prd', 'business_name', 'dist']]
-            result = result.rename(columns={'business_name': reason_col_name, cid+'_prd': cid})
+                             suffixes=['', '_useless'])[[bid, cid + '_prd', 'business_name', 'dist']]
+            result = result.rename(columns={'business_name': reason_col_name, cid + '_prd': cid})
 
             result['dist'] = result['dist'].round(4)
             result[reason_col_name] = 'There is a similar company already inside: ' + result[
@@ -942,7 +947,7 @@ class sub_rec_similar_company_v2(object):
                                           'dist'].astype(str) + '. '
             total_result.append(result)
 
-        result = pd.concat(total_result,axis=0,sort=False)
+        result = pd.concat(total_result, axis=0, sort=False)
         pbar.close()
         # print('pairs %d' % len(result))
         return result
@@ -958,14 +963,14 @@ class sub_rec_similar_company_v2(object):
         # print('pairs to be calced:%d' % len(pred_gr_dat))
 
         prd_comp_feat = \
-            pred_gr_dat[[cid+'_prd']].rename(columns={cid+'_prd': cid}).merge(comp_feat_normed,
-                                                                                                      on=cid,
-                                                                                                      how='left')[
+            pred_gr_dat[[cid + '_prd']].rename(columns={cid + '_prd': cid}).merge(comp_feat_normed,
+                                                                                  on=cid,
+                                                                                  how='left')[
                 comp_feat_col].to_numpy()
         grd_comp_feat = \
-            pred_gr_dat[[cid+'_grd']].rename(columns={cid+'_grd': cid}).merge(comp_feat_normed,
-                                                                                                      on=cid,
-                                                                                                      how='left')[
+            pred_gr_dat[[cid + '_grd']].rename(columns={cid + '_grd': cid}).merge(comp_feat_normed,
+                                                                                  on=cid,
+                                                                                  how='left')[
                 comp_feat_col].to_numpy()
 
         prd_comp_feat = normalize(prd_comp_feat, axis=1)
@@ -974,23 +979,24 @@ class sub_rec_similar_company_v2(object):
 
         distpd = pd.DataFrame(dist, columns=['dist'])
 
-        pred_gr_dat2 = pd.concat([pred_gr_dat[[bid, cid+'_prd', cid+'_grd']], distpd],
+        pred_gr_dat2 = pd.concat([pred_gr_dat[[bid, cid + '_prd', cid + '_grd']], distpd],
                                  axis=1)
         pred_gr_dat2.loc[pred_gr_dat2['dist'] < 1e-12, 'dist'] = 1
         result = pred_gr_dat2.loc[
-            pred_gr_dat2.groupby([bid, cid+'_prd'])['dist'].idxmin()].reset_index(drop=True)
+            pred_gr_dat2.groupby([bid, cid + '_prd'])['dist'].idxmin()].reset_index(drop=True)
 
-        result = result.loc[result['dist'] <= self._sim_thresh,:]
+        result = result.loc[result['dist'] <= self._sim_thresh, :]
 
         result = \
-            result.merge(comp_feat[[cid, 'business_name']], left_on=cid+'_grd', right_on=cid,
+            result.merge(comp_feat[[cid, 'business_name']], left_on=cid + '_grd', right_on=cid,
                          how='left',
-                         suffixes=['', '_useless'])[[bid, cid+'_prd', 'business_name', 'dist']]
-        result = result.rename(columns={'business_name': reason_col_name, cid+'_prd': cid})
+                         suffixes=['', '_useless'])[[bid, cid + '_prd', 'business_name', 'dist']]
+        result = result.rename(columns={'business_name': reason_col_name, cid + '_prd': cid})
 
         result['dist'] = result['dist'].round(4)
-        result[reason_col_name] = 'There is a similar company already inside: ' + result[reason_col_name] + ' with diff: ' + result[
-            'dist'].astype(str) + '. '
+        result[reason_col_name] = 'There is a similar company already inside: ' + result[
+            reason_col_name] + ' with diff: ' + result[
+                                      'dist'].astype(str) + '. '
         # print('pairs %d' % len(result))
         return result
 
@@ -1010,7 +1016,7 @@ class sub_rec_location_distance(object):
     it will be considered as a recommendation reason.
     """
 
-    def __init__(self, reason_col_name='reason',cid = 'duns_number',bid='atlas_location_uuid'):
+    def __init__(self, reason_col_name='reason', cid='duns_number', bid='atlas_location_uuid'):
         self.reason_col_name = reason_col_name
         self.threshold = 0.03
         self.cid = cid
@@ -1024,22 +1030,22 @@ class sub_rec_location_distance(object):
         bid = self.bid
 
         rt_key_col = [bid, 'latitude', 'longitude']
-        loc_comp_loc = sspd[[bid, cid]].merge(loc_feat[rt_key_col],
-                                                                          on=bid,
-                                                                          suffixes=['', '_pred'])
+        loc_comp_loc = sspd[[bid, cid]].merge(loc_feat[rt_key_col], on=bid, suffixes=['', '_pred'])
         rt_key_col = [cid, 'latitude', 'longitude']
         loc_comp_loc = loc_comp_loc.merge(comp_feat[rt_key_col], on=cid, suffixes=['', '_grd'])
         loc_comp_loc['geo_dist'] = loc_comp_loc.apply(
-            lambda row:
-            geo_distance(row['longitude'], row['latitude'],
-                         row['longitude_grd'], row['latitude_grd']), axis=1)
-        loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh,:]
-        loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + str(round(dist_thresh / 1e3, 1)) + 'km). '
+            lambda row: geo_distance(row['longitude'], row['latitude'], row['longitude_grd'], row['latitude_grd']),
+            axis=1)
+        loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
+        # loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + str(round(dist_thresh / 1e3, 1)) + 'km). '
+        loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(loc_comp_loc['geo_dist'],1).astype(str) + 'km). '
         return loc_comp_loc[[bid, cid, self.reason_col_name]]
+
 
 ## Inventory bom
 class sub_rec_inventory_bom(object):
-    def __init__(self, invdb, reason='Inventory reason: This available space of this location can hold your company.',bid='atlas_location_uuid',cid='duns_number'):
+    def __init__(self, invdb, reason='Inventory reason: This available space( %d desks max available) of this location can hold your company.',
+                 bid='atlas_location_uuid', cid='duns_number'):
         self.invdb = invdb.sort_values([bid, 'report_month']) \
             .drop_duplicates([bid], keep='last')
         self.reason = reason
@@ -1050,14 +1056,16 @@ class sub_rec_inventory_bom(object):
                    reason_col='inventory'):
         bid = self.bid
         cid = self.cid
-        sfx = ['','_right']
+        sfx = ['', '_right']
         clpair = sspd[[bid, cid]]
-        comp_feat = comp_feat[[cid,comp_col]]
-        clpair = clpair.merge(comp_feat[[cid, comp_col]].fillna(0), on=cid, suffixes=sfx, how='left').merge(self.invdb, on=bid,
-                                                                                                  suffixes=sfx)
+        comp_feat = comp_feat[[cid, comp_col]]
+        clpair = clpair.merge(comp_feat[[cid, comp_col]].fillna(0), on=cid, suffixes=sfx, how='left').merge(self.invdb,
+                                                                                                            on=bid,
+                                                                                                            suffixes=sfx)
         clpair = clpair.fillna(0)
-        clpair[reason_col] = clpair.apply(lambda x: self.reason if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
+        clpair[reason_col] = clpair.apply(lambda x: (self.reason%int(x[inv_col]))  if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
         return clpair[[cid, bid, reason_col]]
+
 
 ## CompStak
 def translate_compstak_date_and_format(exp_date: str, cur_date, reason):
@@ -1073,14 +1081,15 @@ def translate_compstak_date_and_format(exp_date: str, cur_date, reason):
     diff_month = ceil(diff_date.days / 28)
 
     # trans_reason = reason.replace('XXX', str(diff_month))
-    trans_reason = reason%int(diff_month)
+    trans_reason = reason % int(diff_month)
 
     if diff_month > 0:
         return trans_reason
     else:
         return ''
 
-def translate_compstak_date(exp_date:str,cur_date):
+
+def translate_compstak_date(exp_date: str, cur_date):
     exp_date = exp_date.replace(' ', '')[:10]
     try:
         exp_date = datetime.datetime.strptime(str(exp_date), "%Y-%m-%d")
@@ -1092,6 +1101,7 @@ def translate_compstak_date(exp_date:str,cur_date):
     diff_month = ceil(diff_date.days / 28)
 
     return diff_month
+
 
 class sub_rec_compstak(object):
     def __init__(self, cpstkdb, cpstkdnb,
@@ -1124,9 +1134,8 @@ class sub_rec_compstak(object):
             .drop_duplicates([cid], keep='last')
 
         self.db[reason_col] = self.db['month_remain'].apply(
-            lambda x: self.reason%int(x) if x > 0 else ''
+            lambda x: self.reason % int(x) if x > 0 else ''
         )
-
 
         clpair = clpair.merge(self.db[[cid, reason_col]], on=cid, suffixes=sfx)
         return clpair[[cid, bid, reason_col]]
@@ -1165,7 +1174,7 @@ class sub_rec_talent(object):
                 phs = 'a bit low'
             return phs
 
-        taldb[reason_col] = taldb[talent_score].apply(lambda x: (self.reason % trans_score(x)) )
+        taldb[reason_col] = taldb[talent_score].apply(lambda x: (self.reason % trans_score(x)))
         sspd = sspd.merge(self.lscard, on=bid, suffixes=sfx)
         sspd = sspd.merge(taldb, on=[city_col, state_col], suffixes=sfx)
 

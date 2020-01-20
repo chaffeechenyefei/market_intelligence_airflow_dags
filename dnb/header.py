@@ -47,11 +47,11 @@ hdargs = {
         "reason_similar_biz":
             {"p":1,"useFLG":1},
         "reason_location_based":
-            {"p":7,"useFLG":1},
-        "reason_model_based":
             {"p":8,"useFLG":1},
+        "reason_model_based":
+            {"p":9,"useFLG":1},
         "reason_similar_location":
-            {"p":6,"useFLG":0},
+            {"p":7,"useFLG":0},
         "reason_similar_company":
             {"p":5,"useFLG":0},
         "reason_close_2_current_location":
@@ -61,7 +61,7 @@ hdargs = {
         "reason_compstak":
             {"p": 4, "useFLG": 1},
         "reason_talent_score":
-            {"p":9, "useFLG":1 },
+            {"p":6, "useFLG":1 },
     },
     "cid":"duns_number",
     "bid":"atlas_location_uuid",

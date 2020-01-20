@@ -52,7 +52,7 @@ bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--apps %s ' \
                     '--dbname %s ' \
                     '--data_path %s ' \
-                    '--mode predict --batch-size 1 --airflow ' \
+                    '--mode predict --batch-size 1 --airflow --all ' \
                     '%s ' \
            % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath,feat_cmd)
 print('bash_cmd_predict: >> %s' % bash_cmd_predict)

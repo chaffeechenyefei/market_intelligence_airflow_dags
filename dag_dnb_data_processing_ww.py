@@ -77,14 +77,14 @@ load_op = PythonOperator(
 
 dataloader = data_process(root_path=hdargs["run_root"])
 table_name = 'dnb_city_list%s'%apps
-dnb_city_file_lst = dataloader.load_dnb_city_lst(db=dnbdbname,table=table_name)
-
-cityabbr = dnb_city_file_lst['cityabbr']
-citylongname = dnb_city_file_lst['citylongname']
-origin_comp_file = dnb_city_file_lst['origin_comp_file']
-
-cfile = origin_comp_file
-clfile = cityabbr
+# dnb_city_file_lst = dataloader.load_dnb_city_lst(db=dnbdbname,table=table_name)
+#
+# cityabbr = dnb_city_file_lst['cityabbr']
+# citylongname = dnb_city_file_lst['citylongname']
+# origin_comp_file = dnb_city_file_lst['origin_comp_file']
+#
+# cfile = origin_comp_file
+# clfile = cityabbr
 
 """
 Execution module

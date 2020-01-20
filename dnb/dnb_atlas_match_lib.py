@@ -1,5 +1,6 @@
 from dnb.header import *
 from dnb.utils import *
+from dnb.data_loader import data_process
 import pandas as pd
 import pygeohash as pgh
 from math import *
@@ -99,6 +100,7 @@ def dnb_atlas_match_ww(cfile,clfile,precision,dist_thresh,**context):
     pdc = pd.read_csv(pj(datapath, cfile))
 
     linkCL = fuzzy_geosearchv3(pdc, pdl, precision=precision, thresh=dist_thresh)
+    print('==> Matched size %d'%len(linkCL))
 
     linkCL.to_csv(pj(datapath_mid, outfile), index=None, header=True)
     print('Done')

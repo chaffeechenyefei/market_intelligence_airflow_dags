@@ -1,4 +1,5 @@
 import os
+from dnb.data_loader import data_process
 
 pj = os.path.join
 
@@ -72,12 +73,13 @@ hdargs = {
     "dev_db":"reason_table",
     "test":0, #whether using test_db(space/folder) or dev_db
 
-    "do_data_split":1, #whether doing data split
+    "do_data_split":0, #whether doing data split
     "ratio_data_split":0.9,
     "train_file":"region_train",
     "test_file":"region_test",
     "maxK_region":80,
     "test_round":8,
+    "use_additional_feat":1,
 
     "dnb_dnn_program_path":"/home/ubuntu/mygit/locationIntelligenceModel/",
     "dnb_dnn_prediction_exe":"main_location_intelligence_region.py",
@@ -100,6 +102,20 @@ else:
     datapath_mid = pj(datapath, hdargs["dev_db"])
     dnbdbname = hdargs["dev_db"]
 
+"""
+If using additional_feat, data should be loaded via db.
+"""
+if hdargs["use_additional_feat"]:
+    dataloader = data_process(root_path = datapath)
+    table_name = 'dnb_city_list%s' % hdargs["apps"]
+    dnb_city_file_lst = dataloader.load_dnb_city_lst(db=dnbdbname, table=table_name)
+    cityabbr = dnb_city_file_lst['cityabbr']
+    citylongname = dnb_city_file_lst['citylongname']
+    origin_comp_file = dnb_city_file_lst['origin_comp_file']
+else:
+    pass
+
+
 clfile = [c + hdargs['apps'] for c in cityabbr]
 ssfile = ['all_ww_' + c.replace(hdargs['apps'], '') + '_similarity' + hdargs['apps'] for c in clfile]
 dlsub_ssfile = ['dlsub_' + c for c in ssfile]
@@ -108,8 +124,14 @@ rsfile = ['z_reason_' + c + '_similarity' + hdargs['otversion'] for c in cityabb
 cfile = origin_comp_file
 lfile = hdargs['ls_card']
 cityname = citylongname
-comp_feat_file = 'company_feat' + hdargs['apps']
-loc_feat_file = 'location_feat' + hdargs['apps']
+
+if hdargs["use_additional_feat"]:
+    feat_ext = hdargs['apps'].replace('.csv','_add.csv')
+    comp_feat_file = 'company_feat' + feat_ext
+    loc_feat_file = 'location_feat' + feat_ext
+else:
+    comp_feat_file = 'company_feat' + hdargs['apps']
+    loc_feat_file = 'location_feat' + hdargs['apps']
 
 cid = hdargs["cid"]
 bid = hdargs["bid"]

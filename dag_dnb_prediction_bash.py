@@ -40,6 +40,10 @@ lr = hdargs["dnb_dnn_cmd"]["lr"]
 apps = hdargs["apps"]
 dbname = dnbdbname
 
+if hdargs["use_additional_feat"]:
+    feat_cmd = '--addition'
+else:
+    feat_cmd = ''
 
 bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--run_root %s ' \
@@ -49,13 +53,17 @@ bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--dbname %s ' \
                     '--data_path %s ' \
                     '--mode predict --batch-size 1 --airflow ' \
-           % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath)
+                    '%s ' \
+           % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath,feat_cmd)
 print('bash_cmd_predict: >> %s' % bash_cmd_predict)
 exe_op = BashOperator(
     task_id='dnb_prediction',
     bash_command=bash_cmd_predict,
     dag=dag,
 )
+
+
+
 
 embedding_exe = hdargs["dnb_dnn_embedding_exe"]
 bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
@@ -66,7 +74,8 @@ bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
                              '--dbname %s ' \
                              '--ww ' \
                              '--maxK 150 ' \
-                    %(program_path, embedding_exe, datapath , model, run_root,apps,dbname )
+                             '%s ' \
+                    %(program_path, embedding_exe, datapath , model, run_root,apps,dbname,feat_cmd )
 print('bash_cmd_produce_embedding: >> %s'% bash_cmd_produce_embedding)
 emb_op = BashOperator(
     task_id = 'dnb_produce_embedding',

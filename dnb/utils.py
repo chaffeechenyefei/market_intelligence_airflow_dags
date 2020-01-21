@@ -1131,7 +1131,7 @@ class sub_rec_price(object):
             merge(self.invdb[[bid,inv_price]], on=bid,suffixes=sfx)
 
         clpair[reason_col] = clpair.apply(
-            lambda x: self.reason if float(clpair[cpstk_price])*self.sqft_per_desk >= float(clpair[inv_price]) else ''
+            lambda x: self.reason if float(x[cpstk_price])*self.sqft_per_desk >= float(x[inv_price]) else ''
             , axis=1)
 
         return clpair[[cid, bid, reason_col]]

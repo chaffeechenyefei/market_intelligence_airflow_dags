@@ -17,8 +17,8 @@ fname = 'account_name'
 city = 'physical_city'
 
 
-def load_salesforce_dnb_match(self ,db='' ,table='relation_dnb_account_0120.csv'):
-    db_path = pj(self.root_path, db)
+def load_salesforce_dnb_match(db='' ,table='relation_dnb_account_0120.csv'):
+    db_path = pj(datapath, db)
     sfdnb = pd.read_csv(pj(db_path, table), index_col=0)
     bid = 'atlas_location_uuid'
     cid = 'duns_number'

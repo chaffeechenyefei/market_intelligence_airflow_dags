@@ -137,7 +137,7 @@ for ind_city in range(len(citylongname)):
         Execution module
         """
         #function for execution, here the function is named as reason_name
-        exe_func = getattr(rslib,reason_name)
+        exe_func = getattr(rslib,'xcom_'+reason_name)
         #output file name
         sub_reason_file_name = sub_reason_file_names[reason_name]
 

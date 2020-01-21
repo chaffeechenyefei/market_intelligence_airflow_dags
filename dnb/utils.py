@@ -1103,6 +1103,39 @@ def translate_compstak_date(exp_date: str, cur_date):
     return diff_month
 
 
+class sub_rec_price(object):
+    def __init__(self, cpstkdb, cpstkdnb,invdb,
+                 reason='The price of wework location is cheaper than your current location.',
+                 bid='atlas_location_uuid',
+                 cid='duns_number'):
+        sfx = ['', '_right']
+        cpstkdb = cpstkdb[['tenant_id', 'effective_rent']].dropna().reset_index()
+        cpstkdnb = cpstkdnb[[cid, 'tenant_id']]
+        self.db = cpstkdnb.merge(cpstkdb, on='tenant_id', suffixes=sfx)
+        self.db = self.db[[cid, 'effective_rent']]
+        self.reason = reason
+        self.cid = cid
+        self.bid = bid
+        self.invdb = invdb
+        self.sqft_per_desk = 20
+
+    def get_reason(self, sspd, reason_col='compstak'):
+        bid = self.bid
+        cid = self.cid
+        sfx = ['', '_right']
+        clpair = sspd[[bid, cid]]
+
+        cpstk_price = 'effective_rent'
+        inv_price = 'avg_price_per_office_desk_usd'
+        clpair = clpair.merge(self.db[[cid,cpstk_price]], on=cid,suffixes=sfx).\
+            merge(self.invdb[[bid,inv_price]], on=bid,suffixes=sfx)
+
+        clpair[reason_col] = clpair.apply(
+            lambda x: self.reason if float(clpair[cpstk_price])*self.sqft_per_desk >= float(clpair[inv_price]) else ''
+            , axis=1)
+
+        return clpair[[cid, bid, reason_col]]
+
 class sub_rec_compstak(object):
     def __init__(self, cpstkdb, cpstkdnb,
                  reason='Compstack reason: The lease will expire in %d months.',

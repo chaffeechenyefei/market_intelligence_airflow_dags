@@ -42,7 +42,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
     total_pairs_num = len(sspd)
     print('==> %d pairs of recommendation score' % total_pairs_num)
 
-    compstak_db = pd.read_csv(pjoin(datapath, compstak_file))[['tenant_id', 'expiration_date', 'city']]
+    compstak_db = pd.read_csv(pjoin(datapath, compstak_file))[['tenant_id', 'expiration_date','effective_rent' ,'city']]
     compstak_dnb = pd.read_csv(pjoin(datapath, compstak_dnb_match_file))[['tenant_id', cid, 'city']]
     compstak_db_city = compstak_db.loc[compstak_db['city'] == cityname[ind_city], :]
     compstak_dnb_city = compstak_dnb.loc[compstak_dnb['city'] == cityname[ind_city], :]
@@ -628,3 +628,22 @@ def xcom_reason_model_based(sub_reason_col_name, sub_reason_file_name ,var_task_
         total_pairs_num = total_pairs_num,
     )
     reason_model_based(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
+
+def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    print('Price based')
+    sspd = kwargs['sspd']
+    compstak_db_city = kwargs['compstak_db_city']
+    compstak_dnb_city = kwargs['compstak_dnb_city']
+
+    total_pairs_num = len(sspd)
+    sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
+
+    invdb = pd.read_csv(pjoin(datapath, inventory_file))
+
+    recall_com = sub_rec_price(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,invdb=invdb,
+                                   reason='The price of wework location is cheaper than your current location.',
+                                   cid=cid, bid=bid)
+    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name)
+
+    print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
+    sub_compstak_db.to_csv(sub_reason_file)

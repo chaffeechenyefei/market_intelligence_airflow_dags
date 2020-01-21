@@ -44,6 +44,7 @@ class data_process(object):
             'lease_date':'expiration_date',
             'city':'city',
             'bid':'property_id',
+            'price':'effective_rent',
         }
 
         self.sil = silence
@@ -59,7 +60,8 @@ class data_process(object):
         city = self.cpstk_col['city']
         lease_date = self.cpstk_col['lease_date']
         bid = self.cpstk_col['bid']
-        compstak_db = pd.read_csv(pj(db_path, dbname))[[uid,city,lease_date,bid]]
+        price = self.cpstk_col['price']
+        compstak_db = pd.read_csv(pj(db_path, dbname))[[uid,city,lease_date,bid,price]]
         print('%d compstak loaded'%len(compstak_db))
         return compstak_db
 

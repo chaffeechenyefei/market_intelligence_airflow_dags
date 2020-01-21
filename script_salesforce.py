@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     sfdnb_lst = pd.concat(sfdnb_lst,axis=0)
 
-    print( '%d of %d covered'%len(sfdnb_lst),total)
+    print( '%d of %d covered'% (len(sfdnb_lst),total))
 
     sfdnb_lst = sfdnb_lst.rename(columns={
         'physical_zip_all':'zip_code',

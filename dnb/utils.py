@@ -1038,7 +1038,7 @@ class sub_rec_location_distance(object):
             axis=1)
         loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
         # loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + str(round(dist_thresh / 1e3, 1)) + 'km). '
-        loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(loc_comp_loc['geo_dist'],1).astype(str) + 'km). '
+        loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(loc_comp_loc['geo_dist'].astype(float)/1e3,1).astype(str) + 'km). '
         return loc_comp_loc[[bid, cid, self.reason_col_name]]
 
 

@@ -63,8 +63,8 @@ merging_all_op = PythonOperator(
 )
 
 for ind_city in range(len(citylongname)):
-    if citylongname[ind_city] != 'San Francisco':
-        continue
+    # if citylongname[ind_city] != 'San Francisco':
+    #     continue
     """
     task of each city
     Each city will run in sequence
@@ -80,8 +80,9 @@ for ind_city in range(len(citylongname)):
         },
         dag=dag,
     )
-    prev_city_op_tail >> exe_op
-    prev_city_op_tail = exe_op
-
-
-prev_city_op_tail >> merging_all_op >> end_op
+    main_op >> exe_op >> merging_all_op
+#     prev_city_op_tail >> exe_op
+#     prev_city_op_tail = exe_op
+#
+#
+# prev_city_op_tail >> merging_all_op >> end_op

@@ -289,7 +289,7 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,**kwargs):
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
-    matching_col = 'primary_sic_4_digit'  # 'primary_sic_2_digit_v2','major_industry_category'
+    matching_col = 'primary_sic_4_digit_v2'  # 'primary_sic_2_digit_v2','major_industry_category'
     query_comp_loc = sspd[[bid, cid]]
     query_comp_loc = query_comp_loc.merge(comp_feat[[cid, matching_col]], on=cid, suffixes=sfx)
 
@@ -298,7 +298,7 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,**kwargs):
                                           bid=bid, cid=cid, cname='business_name')
 
     sub_pairs = recall_com.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
-                                                                    reason='This location has a tenant company(%s) which is in the same industry(%s) as your company.')
+                                                                    reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.')
     # explanar
     print('==> Coverage: %1.2f' % (len(sub_pairs) / total_pairs_num))
     sub_pairs.to_csv(sub_reason_file)

@@ -1113,10 +1113,13 @@ class sub_rec_price(object):
         cpstkdnb = cpstkdnb[[cid, 'tenant_id']]
         self.db = cpstkdnb.merge(cpstkdb, on='tenant_id', suffixes=sfx)
         self.db = self.db[[cid, 'effective_rent']]
+        self.db = self.db.sort_values([cid, 'effective_rent']) \
+            .drop_duplicates([cid], keep='last')
         self.reason = reason
         self.cid = cid
         self.bid = bid
-        self.invdb = invdb
+        self.invdb = invdb.sort_values([bid, 'report_month']) \
+            .drop_duplicates([bid], keep='last')
         self.sqft_per_desk = 20
 
     def get_reason(self, sspd, reason_col='compstak'):

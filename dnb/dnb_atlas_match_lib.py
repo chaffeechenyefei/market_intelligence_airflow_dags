@@ -488,7 +488,7 @@ def prod_prediction_pair(**op_kwargs):
         if tot_comp == 0:
             print('skipped')
             continue
-            
+
         pdc[bid] = 'a'
         # in case of multi-mapping
 

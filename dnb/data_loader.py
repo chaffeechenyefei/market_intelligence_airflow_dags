@@ -39,6 +39,12 @@ class data_process(object):
             'lng':'longitude',
             'bid':'atlas_location_uuid',
         }
+        self.cpstk_col = {
+            'uid':'tenant_id',
+            'lease_date':'expiration_date',
+            'city':'city',
+            'bid':'property_id',
+        }
 
         self.sil = silence
         self.demand_dat = 'salesforce demand signal'
@@ -46,6 +52,16 @@ class data_process(object):
         self.inv_dat = 'inventory data'
         self.op_dat = 'opportunity table'
         self.talent_dat = 'talent table'
+
+    def load_compstak(self,db='compstak',dbname='tetris_mv_tetris_transactions_2016_current.csv'):
+        db_path = pj(self.root_path,db)
+        uid = self.cpstk_col['uid']
+        city = self.cpstk_col['city']
+        lease_date = self.cpstk_col['lease_date']
+        bid = self.cpstk_col['bid']
+        compstak_db = pd.read_csv(pj(db_path, dbname))[[uid,city,lease_date,bid]]
+        print('%d compstak loaded'%len(compstak_db))
+        return compstak_db
 
     def load_inventory(self, db='compstak', dbname='inventory_bom.csv'):
         db_path = pj(self.root_path, db)

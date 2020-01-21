@@ -11,6 +11,101 @@ def set_xcom_var(ti, key, value):
 def get_xcom_var(ti, task_id, key):
     return ti.xcom_pull(task_ids=task_id, key=key)
 
+
+def prod_all_reason_in_one_func(ind_city,var_task_space, **context):
+    sspd_file = pjoin(datapath_mid, ssfile[ind_city])
+    if not os.path.isfile(sspd_file):
+        skpFLG = True
+        print('skipped')
+        return
+
+    """
+    load data here
+    """
+    print('##city: %s processing##' % citylongname[ind_city])
+    comp_feat = pd.read_csv(pjoin(datapath, cfile[ind_city]))
+    comp_loc = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))
+    loc_feat = pd.read_csv(pjoin(datapath, lfile))
+    loc_feat = loc_feat.merge(comp_loc[[bid]].groupby(bid).first().reset_index(),
+                              on=bid, suffixes=sfx)
+    print('Global filtering')
+    global_ft = global_filter(loc_feat=loc_feat)
+    sub_loc_feat = global_ft.city_filter(city_name=cityname[ind_city]).end()
+
+    sub_loc_feat_ww = sub_loc_feat.loc[sub_loc_feat['is_wework'] == True, :]
+    # sub_comp_loc: company-location pair where location should belongs to ww
+    sub_comp_loc = pd.merge(comp_loc, sub_loc_feat_ww[[bid]], on=bid,
+                            suffixes=sfx)  # multi comp loc
+    print('==> %d locations inside the city' % len(sub_loc_feat_ww))
+
+    sspd = pd.read_csv(pjoin(datapath_mid, ssfile[ind_city]), index_col=0)
+    total_pairs_num = len(sspd)
+    print('==> %d pairs of recommendation score' % total_pairs_num)
+
+    compstak_db = pd.read_csv(pjoin(datapath, compstak_file))[['tenant_id', 'expiration_date', 'city']]
+    compstak_dnb = pd.read_csv(pjoin(datapath, compstak_dnb_match_file))[['tenant_id', cid, 'city']]
+    compstak_db_city = compstak_db.loc[compstak_db['city'] == cityname[ind_city], :]
+    compstak_dnb_city = compstak_dnb.loc[compstak_dnb['city'] == cityname[ind_city], :]
+    print('==> %d compstak_db loaded' % len(compstak_db_city))
+
+    comp_feat_normed = pd.read_csv(pjoin(datapath_mid, comp_feat_file), index_col=0)
+    if 'city' in comp_feat_normed.columns:
+        comp_feat_normed = comp_feat_normed.loc[comp_feat_normed['city'] == cityname[ind_city]]
+    loc_feat_normed = pd.read_csv(pjoin(datapath_mid, loc_feat_file), index_col=0)
+    if 'city' in loc_feat_normed.columns:
+        loc_feat_normed = loc_feat_normed.loc[loc_feat_normed['city'] == cityname[ind_city]]
+    print('==> normalized feature loaded')
+
+    dlsub_ssfile_db = dlsub_ssfile[ind_city]
+
+
+    reason_names = hdargs["reason_col_name"]
+    sub_reason_file_names = {}
+    for reason_name in reason_names.keys():
+        if reason_names[reason_name]["useFLG"]:
+            sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
+            sub_reason_file_name = sub_reason_file_names[reason_name]
+            exe_func = locals()[reason_name]
+            exe_func( sub_reason_col_name=reason_name, sub_reason_file_name=sub_reason_file_name,var_task_space=var_task_space, **context )
+
+    print('==> Merging reasons')
+    city_reason_file_name = rsfile[ind_city]
+    sample_sspd = sspd
+    exist_reason = []
+    for reason_name, value in reason_names.items():
+        # priority,useFLG = value["p"],value["useFLG"]
+        db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
+        if os.path.isfile(db_path):
+            exist_reason.append(reason_name)
+            reason_db = pd.read_csv(db_path, index_col=0)
+            match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
+            sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
+        else:
+            print('%s skipped because no file is found in %s' % (reason_name, str(db_path)))
+
+    sample_sspd = sample_sspd.fillna('')
+    print('Json format transforming...')
+    sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
+    sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason]
+    sample_sspd['reason'] = sample_sspd.apply(
+        lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
+                                                   target_phss=['Location similar in: ', 'Implicit reason: ']), axis=1)
+
+    sample_sspd[cid] = sample_sspd[cid].astype(int)
+    sample_sspd = sample_sspd.rename(columns={
+        "reason": "note", "duns_number": "company_id"
+    })
+    sample_sspd['building_id'] = sample_sspd['atlas_location_uuid'].apply(lambda x: hash(x))
+    sample_sspd['algorithm'] = 'model_wide_and_deep'
+
+    col_list = ['company_id', 'building_id', 'similarity', 'note', 'atlas_location_uuid', 'algorithm']
+    sample_sspd = sample_sspd[col_list]
+    sample_sspd['similarity'] = sample_sspd['similarity'].round(4)
+
+    print('==> final %d data to be saved'%len(sample_sspd))
+    sample_sspd.to_csv(pjoin(datapath_mid, city_reason_file_name))
+    print('==> Done')
+
 def data_merge_for_all_cities():
     print('merging results')
     dfs = []
@@ -132,7 +227,11 @@ def data_prepare(ind_city,**context):
     print('==> %d compstak_db loaded'%len(compstak_db_city))
 
     comp_feat_normed = pd.read_csv(pjoin(datapath_mid, comp_feat_file), index_col=0)
+    if 'city' in comp_feat_normed.columns:
+        comp_feat_normed = comp_feat_normed.loc[ comp_feat_normed['city']==cityname[ind_city] ]
     loc_feat_normed = pd.read_csv(pjoin(datapath_mid, loc_feat_file), index_col=0)
+    if 'city' in loc_feat_normed.columns:
+        loc_feat_normed = loc_feat_normed.loc[ loc_feat_normed['city']==cityname[ind_city] ]
     print('==> normalized feature loaded')
 
     dlsub_ssfile_db = dlsub_ssfile[ind_city]

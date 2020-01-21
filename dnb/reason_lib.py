@@ -600,8 +600,11 @@ def reason_model_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
 
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
+    dlsub_file_path = pjoin(datapath_mid, dlsub_ssfile_db_name)
+    if not os.path.isfile(dlsub_file_path):
+        print('no files %s found' % dlsub_file_path)
     featTranslator = feature_translate()
-    dlsubdat = pd.read_csv(pjoin(datapath, dlsub_ssfile_db_name), index_col=0)
+    dlsubdat = pd.read_csv(dlsub_file_path, index_col=0)
     dlsubdat[sub_reason_col_name] = dlsubdat.apply(lambda row: featTranslator.make_sense(row['merged_feat']),
                                                    axis=1)
     dlsubdat = dlsubdat[[bid, cid, sub_reason_col_name]]

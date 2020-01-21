@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     dedup_sfdnb = sfdnb.drop_duplicates([fid,cid,city], keep='first').reset_index()[[fid,fname,cid,city]]
 
-    print('Shrinkage: %f'%len(dedup_sfdnb)/len(sfdnb))
+    print('Shrinkage: %1.2f'% (len(dedup_sfdnb)/len(sfdnb)))
 
     total = len(dedup_sfdnb)
 

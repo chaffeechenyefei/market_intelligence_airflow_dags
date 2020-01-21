@@ -42,26 +42,31 @@ if __name__ == '__main__':
 
     dedup_sfdnb = sfdnb.drop_duplicates([fid,cid,city], keep='first').reset_index()[[fid,fname,cid,city]]
 
-    print('Shrinkage: %1.2f'% (len(dedup_sfdnb)/len(sfdnb)))
+    print('Duplicate Shrinkage: %1.2f'% (len(dedup_sfdnb)/len(sfdnb)))
 
     total = len(dedup_sfdnb)
 
+    sfdnb_lst = []
     for ind_city,cur_city_name in enumerate(citylongname):
         print('## %s ##'%cur_city_name )
         comp_file = cfile[ind_city]
         comp_dat = pd.read_csv( pj(datapath,comp_file))[[cid,city,'physical_zip_all','msa','latitude','longitude','business_name']]
         comp_dat['state'] = comp_dat['msa'].apply(lambda x: str(x).replace(' ','').split(',')[-1] )
-        dedup_sfdnb = dedup_sfdnb.merge(comp_dat,on=[cid,city],how='left')
+        tmp = dedup_sfdnb.merge(comp_dat, on=[cid, city], suffixes=sfx)
+        sfdnb_lst.append( tmp )
+        print('%d'%len(tmp))
 
-    print( '%d of %d covered'%len(dedup_sfdnb.loc[dedup_sfdnb['business_name'].notnull()]),total)
+    sfdnb_lst = pd.concat(sfdnb_lst,axis=0)
 
-    dedup_sfdnb = dedup_sfdnb.rename(columns={
+    print( '%d of %d covered'%len(sfdnb_lst),total)
+
+    sfdnb_lst = sfdnb_lst.rename(columns={
         'physical_zip_all':'zip_code',
         city:'city',
         'business_name':'company_name',
     })
 
-    dedup_sfdnb.to_csv(pj(datapath_mid,'salesforce_acc_duns_info.csv'))
+    sfdnb_lst.to_csv(pj(datapath_mid,'salesforce_acc_duns_info.csv'))
 
 
 

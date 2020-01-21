@@ -34,6 +34,7 @@ inventory_file = 'inventory_bom.csv'
 compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
 compstak_dnb_match_file = 'compstak_dnb_v2.csv'
 salesforce_dnb_file = 'salesforce_comp_city_from_opp.csv'
+salesforce_dnb_info_file = 'salesforce_acc_duns_info.csv'
 
 kwargs_key = 'task_instance'
 

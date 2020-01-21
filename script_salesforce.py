@@ -64,6 +64,7 @@ if __name__ == '__main__':
         'physical_zip_all':'zip_code',
         city:'city',
         'business_name':'company_name',
+        fid:'sfdc_account_id',
     })
 
     sfdnb_lst = sfdnb_lst.drop_duplicates([fid, cid, 'city'], keep='first').reset_index()

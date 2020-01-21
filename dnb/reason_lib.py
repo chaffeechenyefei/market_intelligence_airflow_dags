@@ -122,12 +122,12 @@ def prod_all_reason_in_one_func(ind_city, **context):
 
     sample_sspd[cid] = sample_sspd[cid].astype(int)
     sample_sspd = sample_sspd.rename(columns={
-        "reason": "note", "duns_number": "company_id"
+        "reason": "note"
     })
     sample_sspd['building_id'] = sample_sspd['atlas_location_uuid'].apply(lambda x: hash(x))
     sample_sspd['algorithm'] = 'model_wide_and_deep'
 
-    col_list = ['company_id', 'building_id', 'similarity', 'note', 'atlas_location_uuid', 'algorithm']
+    col_list = [cid, 'building_id', 'similarity', 'note', 'atlas_location_uuid', 'algorithm']
     sample_sspd = sample_sspd[col_list]
     sample_sspd['similarity'] = sample_sspd['similarity'].round(4)
 
@@ -153,12 +153,10 @@ def data_merge_for_all_cities():
     pd_id = pd.DataFrame(np.array(k), columns=['building_id'])
     loc_df = pd.concat([loc_df, pd_id], axis=1)
 
-    dfs = dfs[['company_id', 'similarity', 'note', 'algorithm', 'atlas_location_uuid']].merge(loc_df,
-                                                                                              on='atlas_location_uuid',
-                                                                                              how='left',
-                                                                                              suffixes=['', '_right'])
+    dfs = dfs[[cid, 'similarity', 'note', 'algorithm', 'atlas_location_uuid']].merge(loc_df, on=bid, how='left',
+                                                                                     suffixes=['', '_right'])
 
-    col_list = ['company_id', 'building_id', 'similarity', 'note', 'algorithm', 'atlas_location_uuid']
+    col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid]
     dfs = dfs[col_list]
 
     if TEST_FLG:
@@ -166,6 +164,19 @@ def data_merge_for_all_cities():
     else:
         dfs.to_csv('sub_all_similarity_multi'+ hdargs["otversion"], index=False)
 
+    print('dnb_atlas score saved...')
+
+    add_info_dat = pd.read_csv(pj(datapath_mid, salesforce_dnb_info_file), index_col=0)[
+        ['sfdc_account_id', cid,'account_name','company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
+
+    dfs = dfs.merge(add_info_dat,on=cid,suffixes=sfx)
+
+    dfs = dfs[
+        ['sfdc_account_id', 'account_name', 'building_id', bid, 'similarity', 'note', 'algorithm', cid, 'company_name',
+         'city', 'zip_code', 'state', 'longitude', 'latitude']]
+
+    today = datetime.date.today()
+    dfs.to_csv('recommendation_reason_%s.csv'%str(today),index=False)
     print('Done!')
 
 

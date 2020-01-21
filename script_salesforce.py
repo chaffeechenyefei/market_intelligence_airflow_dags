@@ -66,6 +66,7 @@ if __name__ == '__main__':
         'business_name':'company_name',
     })
 
+    sfdnb_lst = sfdnb_lst.drop_duplicates([fid, cid, city], keep='first').reset_index()
     sfdnb_lst.to_csv(pj(datapath_mid,'salesforce_acc_duns_info.csv'))
 
 

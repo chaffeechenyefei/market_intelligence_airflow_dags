@@ -1106,7 +1106,7 @@ def translate_compstak_date(exp_date: str, cur_date):
 class sub_rec_compstak(object):
     def __init__(self, cpstkdb, cpstkdnb,
                  reason='Compstack reason: The lease will expire in %d months.',
-                 bid='altas_location_uuid',
+                 bid='atlas_location_uuid',
                  cid='duns_number'):
         sfx = ['', '_right']
         cpstkdb = cpstkdb[['tenant_id', 'expiration_date']]
@@ -1143,7 +1143,7 @@ class sub_rec_compstak(object):
 
 class sub_rec_talent(object):
     def __init__(self, talentdb, lsdb, reason='Talent score here is %s.',
-                 bid='altas_location_uuid',
+                 bid='atlas_location_uuid',
                  cid='duns_number'):
         self.bid = bid
         self.cid = cid

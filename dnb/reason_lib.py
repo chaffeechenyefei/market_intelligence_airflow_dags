@@ -647,3 +647,19 @@ def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
 
     print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
     sub_compstak_db.to_csv(sub_reason_file)
+
+def xcom_reason_price_based(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
+    print('Price based')
+    ti = context.get("ti")
+    skpFLG = get_xcom_var(ti,var_task_space,'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
+
+    compstak_db_city = get_xcom_var(ti,var_task_space, 'compstak_db_city')
+    compstak_dnb_city = get_xcom_var(ti, var_task_space, 'compstak_dnb_city')
+    kwargs = dict(
+        compstak_db_city = compstak_db_city,
+        compstak_dnb_city = compstak_dnb_city,
+    )
+    reason_price_based(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)

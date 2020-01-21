@@ -62,6 +62,8 @@ def branch_choice(**op_kwargs):
 prev_city_op_tail = main_op
 
 for ind_city in range(len(citylongname)):
+    if citylongname[ind_city]!= 'San Francisco':
+        continue
     reason_names = hdargs["reason_col_name"]
 
     """

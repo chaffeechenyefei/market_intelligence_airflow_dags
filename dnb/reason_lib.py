@@ -100,7 +100,9 @@ def prod_all_reason_in_one_func(ind_city, **context):
     sample_sspd = sspd
     exist_reason = []
     for reason_name, value in reason_names.items():
-        # priority,useFLG = value["p"],value["useFLG"]
+        if reason_name not in sub_reason_file_names.keys():
+            print('%s skipped because not generated' % reason_name)
+            continue
         db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
         if os.path.isfile(db_path):
             exist_reason.append(reason_name)

@@ -89,6 +89,7 @@ hdargs = {
         "lr":0.01,
     },
     "dnb_dnn_embedding_exe":"get_embedding_feature_region.py",
+    "dnb_dnn_model_based_exe":"main_location_intelligence_region_based_reason.py"
 }
 
 

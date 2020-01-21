@@ -92,7 +92,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
         if reason_names[reason_name]["useFLG"]:
             sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
             sub_reason_file_name = sub_reason_file_names[reason_name]
-            exe_func = locals()[reason_name]
+            exe_func = globals()[reason_name]
             exe_func( sub_reason_col_name=reason_name, sub_reason_file_name=sub_reason_file_name, **kwargs )
 
     print('==> Merging reasons')

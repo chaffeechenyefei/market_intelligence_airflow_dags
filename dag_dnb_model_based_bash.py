@@ -53,7 +53,7 @@ bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--dbname %s ' \
                     '--data_path %s ' \
                     '--mode input_grad ' \
-                   '--prename all_ww ' \
+                   '--pre_name all_ww ' \
                     '%s ' \
            % (program_path, model_based_exe, run_root, model, lr, apps, dbname, datapath,feat_cmd)
 print('bash_cmd_predict: >> %s' % bash_cmd_predict)

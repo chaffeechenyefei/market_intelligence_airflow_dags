@@ -91,8 +91,8 @@ def prod_all_reason_in_one_func(ind_city, **context):
     reason_names = hdargs["reason_col_name"]
     sub_reason_file_names = {}
     for reason_name in reason_names.keys():
+        sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
         if reason_names[reason_name]["useFLG"]:
-            sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
             sub_reason_file_name = sub_reason_file_names[reason_name]
             exe_func = globals()[reason_name]
             exe_func( sub_reason_col_name=reason_name, sub_reason_file_name=sub_reason_file_name, **kwargs )
@@ -102,9 +102,6 @@ def prod_all_reason_in_one_func(ind_city, **context):
     sample_sspd = sspd
     exist_reason = []
     for reason_name, value in reason_names.items():
-        if reason_name not in sub_reason_file_names.keys():
-            print('%s skipped because not generated' % reason_name)
-            continue
         db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
         if os.path.isfile(db_path):
             exist_reason.append(reason_name)

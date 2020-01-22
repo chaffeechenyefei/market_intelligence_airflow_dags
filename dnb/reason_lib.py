@@ -104,10 +104,11 @@ def prod_all_reason_in_one_func(ind_city, **context):
     for reason_name, value in reason_names.items():
         db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
         if os.path.isfile(db_path) and value["cache"]:#if cache exist then use cache reason
-            exist_reason.append(reason_name)
             reason_db = pd.read_csv(db_path, index_col=0)
-            match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
-            sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
+            if len(reason_db) > 0:
+                exist_reason.append(reason_name)
+                match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
+                sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
         else:
             print('%s skipped because no file is found in %s' % (reason_name, str(db_path)))
 
@@ -315,7 +316,8 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,**kwargs):
                                                                     reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.')
     # explanar
     print('==> Coverage: %1.2f' % (len(sub_pairs) / total_pairs_num))
-    sub_pairs.to_csv(sub_reason_file)
+    if len(sub_pairs) > 0:
+        sub_pairs.to_csv(sub_reason_file)
 
 def xcom_reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Is there a company with similar biz inside the location?')
@@ -349,7 +351,8 @@ def reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name, *
     sub_close_loc = recall_com.get_reason(sspd=sspd, loc_feat=loc_feat, comp_feat=comp_feat, dist_thresh=3.2e3)
 
     print('==> Coverage: %1.2f' % (len(sub_close_loc) / total_pairs_num))
-    sub_close_loc.to_csv(sub_reason_file)
+    if len(sub_close_loc) > 0:
+        sub_close_loc.to_csv(sub_reason_file)
 
 
 def xcom_reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
@@ -385,7 +388,8 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
     sub_inventory_db = recall_com.get_reason(sspd=sspd, comp_feat=comp_feat, comp_col='emp_here',
                                               inv_col='max_reservable_capacity', reason_col=sub_reason_col_name)
     print('==> Coverage: %1.2f' % (len(sub_inventory_db) / total_pairs_num))
-    sub_inventory_db.to_csv(sub_reason_file)
+    if len(sub_inventory_db):
+        sub_inventory_db.to_csv(sub_reason_file)
 
 def xcom_reason_inventory_bom(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Inventory bom')
@@ -417,7 +421,8 @@ def reason_talent_score(sub_reason_col_name, sub_reason_file_name, **kwargs):
     sub_talent_db = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name)
 
     print('==> Coverage: %1.2f' % (len(sub_talent_db) / total_pairs_num))
-    sub_talent_db.to_csv(sub_reason_file)
+    if len(sub_talent_db) > 0:
+        sub_talent_db.to_csv(sub_reason_file)
 
 
 def xcom_reason_talent_score(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
@@ -448,7 +453,8 @@ def reason_compstak(sub_reason_col_name, sub_reason_file_name, **kwargs):
     sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name)
 
     print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
-    sub_compstak_db.to_csv(sub_reason_file)
+    if len(sub_compstak_db) > 0:
+        sub_compstak_db.to_csv(sub_reason_file)
 
 def xcom_reason_compstak(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Compstak')
@@ -501,7 +507,8 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, **kwargs):
                                                  reason_col_name=sub_reason_col_name, batch_size=5000)
 
     print('==> Coverage: %1.2f' % (len(sim_comp_name) / total_pairs_num))
-    sim_comp_name.to_csv(sub_reason_file)
+    if len(sim_comp_name) > 0:
+        sim_comp_name.to_csv(sub_reason_file)
 
 def xcom_reason_similar_company(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Is there a similar company inside the recommended location?')
@@ -541,7 +548,8 @@ def reason_similar_location(sub_reason_col_name, sub_reason_file_name, **kwargs)
                                           reason='Location similar in: ', multi_flag=True)
 
     print('==> Coverage: %1.2f' % (len(loc_comp_loc) / total_pairs_num))
-    loc_comp_loc.to_csv(sub_reason_file)
+    if len(loc_comp_loc) >0:
+        loc_comp_loc.to_csv(sub_reason_file)
 
 
 def xcom_reason_similar_location(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
@@ -592,7 +600,8 @@ def reason_location_based(sub_reason_col_name, sub_reason_file_name , **kwargs):
         sub_reason_col_name] + '. '
 
     print('==> Coverage: %1.2f' % (len(sub_loc_recall) / len(sub_loc_feat_ww)))
-    sub_loc_recall.to_csv(sub_reason_file)
+    if len(sub_loc_recall) > 0:
+        sub_loc_recall.to_csv(sub_reason_file)
 
 def xcom_reason_location_based(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('How is region?(Location based reason)')
@@ -626,7 +635,8 @@ def reason_model_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
     dlsubdat = dlsubdat[[bid, cid, sub_reason_col_name]]
 
     print('==> Coverage: %1.2f' % (len(dlsubdat) / total_pairs_num))
-    dlsubdat.to_csv(sub_reason_file)
+    if len(dlsubdat) > 0:
+        dlsubdat.to_csv(sub_reason_file)
 
 def xcom_reason_model_based(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Model based Reason(Implicit reason)')
@@ -660,7 +670,8 @@ def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
     sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name)
 
     print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
-    sub_compstak_db.to_csv(sub_reason_file)
+    if len(sub_compstak_db) >0:
+        sub_compstak_db.to_csv(sub_reason_file)
 
 def xcom_reason_price_based(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
     print('Price based')

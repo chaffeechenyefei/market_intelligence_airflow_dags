@@ -50,11 +50,11 @@ hdargs = {
         "reason_location_based":
             {"p":8,"useFLG":1,"cache":1},
         "reason_model_based":
-            {"p":10,"useFLG":1,"cache":1},
+            {"p":10,"useFLG":0,"cache":1},
         "reason_similar_location":
             {"p":9,"useFLG":0,"cache":1},
         "reason_similar_company":
-            {"p":6,"useFLG":1,"cache":1},
+            {"p":6,"useFLG":0,"cache":1},
         "reason_close_2_current_location":
             {"p":5,"useFLG":1,"cache":1},
         "reason_inventory_bom":

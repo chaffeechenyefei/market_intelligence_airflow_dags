@@ -164,9 +164,9 @@ def data_merge_for_all_cities():
     dfs = dfs[col_list]
 
     if TEST_FLG:
-        dfs.to_csv('sub_all_similarity_multi_test'+ hdargs["otversion"], index=False)
+        dfs.to_csv( pj( datapath,'result/sub_all_similarity_multi_test'+ hdargs["otversion"]), index=False)
     else:
-        dfs.to_csv('sub_all_similarity_multi'+ hdargs["otversion"], index=False)
+        dfs.to_csv(pj(datapath,'result/sub_all_similarity_multi'+ hdargs["otversion"]), index=False)
 
     print('dnb_atlas score saved...')
 
@@ -197,7 +197,7 @@ def data_merge_for_all_cities():
          'city', 'zip_code', 'state', 'longitude', 'latitude','selected']]
 
     today = datetime.date.today()
-    dfs.to_csv('recommendation_reason_%s.csv'%str(today),index=False)
+    dfs.to_csv(pj(datapath,'result/recommendation_reason_%s.csv'%str(today)),index=False)
     print('Done!')
 
 

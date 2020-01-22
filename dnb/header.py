@@ -32,7 +32,7 @@ origin_comp_file = ['dnb_pa.csv', 'dnb_sf.csv', 'dnb_sj.csv', 'dnb_Los_Angeles.c
 
 inventory_file = 'inventory_bom.csv'
 compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
-compstak_dnb_match_file = 'compstak_dnb_v2.csv'
+compstak_dnb_match_file = 'relation_dnb_compstak_0120.csv'
 salesforce_dnb_file = 'salesforce_comp_city_from_opp.csv'
 salesforce_dnb_info_file = 'salesforce_acc_duns_info.csv'
 
@@ -54,7 +54,7 @@ hdargs = {
         "reason_similar_location":
             {"p":9,"useFLG":0},
         "reason_similar_company":
-            {"p":6,"useFLG":0},
+            {"p":6,"useFLG":1},
         "reason_close_2_current_location":
             {"p":5,"useFLG":1},
         "reason_inventory_bom":

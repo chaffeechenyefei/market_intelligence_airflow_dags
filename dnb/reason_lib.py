@@ -42,8 +42,10 @@ def prod_all_reason_in_one_func(ind_city, **context):
     total_pairs_num = len(sspd)
     print('==> %d pairs of recommendation score' % total_pairs_num)
 
-    compstak_db = pd.read_csv(pjoin(datapath, compstak_file))[['tenant_id', 'expiration_date','effective_rent' ,'city']]
-    compstak_dnb = pd.read_csv(pjoin(datapath, compstak_dnb_match_file))[['tenant_id', cid, 'city']]
+    compstak_db = pd.read_csv(pjoin(datapath, compstak_file))[
+        ['tenant_id', 'expiration_date', 'effective_rent', 'city']]
+    compstak_dnb = pd.read_csv(pjoin(datapath, compstak_dnb_match_file))[['tenant_id', cid, 'physical_city']].rename(
+        columns={'physical_city': 'city', })
     compstak_db_city = compstak_db.loc[compstak_db['city'] == cityname[ind_city], :]
     compstak_dnb_city = compstak_dnb.loc[compstak_dnb['city'] == cityname[ind_city], :]
     print('==> %d compstak_db loaded' % len(compstak_db_city))

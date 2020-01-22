@@ -391,13 +391,16 @@ class sub_rec_similar_company(object):
         sub_pairs = pd.merge(query_comp_loc[[self.cid, self.bid, self.matching_col]], self.loc_type,
                              on=[self.bid, self.matching_col], suffixes=['', '_right'])
         sub_pairs = sub_pairs.dropna()
-        if jsFLG:
-            sub_pairs[self.reason_col_name] = sub_pairs.apply(
-                lambda x: json.dumps({jsKey: [(reason % (str(x[self.cname]), str(x[self.matching_col])))]}), axis=1)
+        if len(sub_pairs) > 0:
+            if jsFLG:
+                sub_pairs[self.reason_col_name] = sub_pairs.apply(
+                    lambda x: json.dumps({jsKey: [(reason % (str(x[self.cname]), str(x[self.matching_col])))]}), axis=1)
+            else:
+                # sub_pairs[self.reason_col_name] = sub_pairs[self.cname].apply(lambda x: reason % str(x))
+                sub_pairs[self.reason_col_name] = sub_pairs.apply(
+                    lambda x: reason % (str(x[self.cname]), str(x[self.matching_col])), axis=1)
         else:
-            # sub_pairs[self.reason_col_name] = sub_pairs[self.cname].apply(lambda x: reason % str(x))
-            sub_pairs[self.reason_col_name] = sub_pairs.apply(
-                lambda x: reason % (str(x[self.cname]), str(x[self.matching_col])), axis=1)
+            sub_pairs[self.reason_col_name] = ''
         return sub_pairs
 
 
@@ -501,7 +504,7 @@ def merge_str_2_json_rowise_reformat(row, src_cols: list, jsKey='reasons', targe
     nreason = []
     for src_col in src_cols:
         rs = str(row[src_col])
-        if rs:
+        if rs != '':
             need_reformat = False
             for target_phs in target_phss:
                 if rs.startswith(target_phs):
@@ -1033,9 +1036,12 @@ class sub_rec_location_distance(object):
         loc_comp_loc = sspd[[bid, cid]].merge(loc_feat[rt_key_col], on=bid, suffixes=['', '_pred'])
         rt_key_col = [cid, 'latitude', 'longitude']
         loc_comp_loc = loc_comp_loc.merge(comp_feat[rt_key_col], on=cid, suffixes=['', '_grd'])
-        loc_comp_loc['geo_dist'] = loc_comp_loc.apply(
-            lambda row: geo_distance(row['longitude'], row['latitude'], row['longitude_grd'], row['latitude_grd']),
-            axis=1)
+        if len(loc_comp_loc) > 0:
+            loc_comp_loc['geo_dist'] = loc_comp_loc.apply(
+                lambda row: geo_distance(row['longitude'], row['latitude'], row['longitude_grd'], row['latitude_grd']),
+                axis=1)
+        else:
+            loc_comp_loc['geo_dist'] = ''
         loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
         # loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + str(round(dist_thresh / 1e3, 1)) + 'km). '
         loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(loc_comp_loc['geo_dist'].astype(float)/1e3,1).astype(str) + 'km). '
@@ -1063,7 +1069,10 @@ class sub_rec_inventory_bom(object):
                                                                                                             on=bid,
                                                                                                             suffixes=sfx)
         clpair = clpair.fillna(0)
-        clpair[reason_col] = clpair.apply(lambda x: (self.reason%int(x[inv_col]))  if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
+        if len(clpair) > 0:
+            clpair[reason_col] = clpair.apply(lambda x: (self.reason%int(x[inv_col]))  if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
+        else:
+            clpair[reason_col] = ''
         return clpair[[cid, bid, reason_col]]
 
 
@@ -1132,11 +1141,12 @@ class sub_rec_price(object):
         inv_price = 'avg_price_per_office_desk_usd'
         clpair = clpair.merge(self.db[[cid,cpstk_price]], on=cid,suffixes=sfx).\
             merge(self.invdb[[bid,inv_price]], on=bid,suffixes=sfx)
-
-        clpair[reason_col] = clpair.apply(
-            lambda x: self.reason if float(x[cpstk_price])*self.sqft_per_desk >= float(x[inv_price]) else ''
-            , axis=1)
-
+        if len(clpair[reason_col]) > 0:
+            clpair[reason_col] = clpair.apply(
+                lambda x: self.reason if float(x[cpstk_price]) * self.sqft_per_desk >= float(x[inv_price]) else ''
+                , axis=1)
+        else:
+            clpair[reason_col] = ''
         return clpair[[cid, bid, reason_col]]
 
 class sub_rec_compstak(object):

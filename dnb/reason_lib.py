@@ -115,9 +115,13 @@ def prod_all_reason_in_one_func(ind_city, **context):
     print('Json format transforming...')
     sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
     sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason]
-    sample_sspd['reason'] = sample_sspd.apply(
-        lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
-                                                   target_phss=['Location similar in: ', 'Implicit reason: ']), axis=1)
+    if len(sample_sspd) > 0:
+        sample_sspd['reason'] = sample_sspd.apply(
+            lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
+                                                       target_phss=['Location similar in: ', 'Implicit reason: ']),
+            axis=1)
+    else:
+        sample_sspd['reason'] = ''
 
     sample_sspd[cid] = sample_sspd[cid].astype(int)
     sample_sspd = sample_sspd.rename(columns={

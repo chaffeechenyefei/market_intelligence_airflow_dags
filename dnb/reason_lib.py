@@ -471,7 +471,7 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, **kwargs):
     # comp_loc = get_xcom_var(ti, var_task_space, 'comp_loc')
     comp_feat_normed = kwargs['comp_feat_normed']
 
-    comp_feat_col = [c for c in comp_feat_normed.columns if c not in [cid, bid]]
+    comp_feat_col = [c for c in comp_feat_normed.columns if c not in [cid, bid,'city','label']]
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 

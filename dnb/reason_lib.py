@@ -103,7 +103,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
     exist_reason = []
     for reason_name, value in reason_names.items():
         db_path = pjoin(datapath_mid, sub_reason_file_names[reason_name])
-        if os.path.isfile(db_path):
+        if os.path.isfile(db_path) and value["cache"]:#if cache exist then use cache reason
             exist_reason.append(reason_name)
             reason_db = pd.read_csv(db_path, index_col=0)
             match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given

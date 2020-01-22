@@ -46,25 +46,25 @@ hdargs = {
     "otversion":"_200106.csv",
     "reason_col_name":{
         "reason_similar_biz":
-            {"p":4,"useFLG":1},
+            {"p":4,"useFLG":1,"cache":1},
         "reason_location_based":
-            {"p":8,"useFLG":1},
+            {"p":8,"useFLG":1,"cache":1},
         "reason_model_based":
-            {"p":10,"useFLG":1},
+            {"p":10,"useFLG":1,"cache":1},
         "reason_similar_location":
-            {"p":9,"useFLG":0},
+            {"p":9,"useFLG":0,"cache":1},
         "reason_similar_company":
-            {"p":6,"useFLG":1},
+            {"p":6,"useFLG":1,"cache":1},
         "reason_close_2_current_location":
-            {"p":5,"useFLG":1},
+            {"p":5,"useFLG":1,"cache":1},
         "reason_inventory_bom":
-            {"p": 3, "useFLG": 1},
+            {"p": 3, "useFLG": 1,"cache":1},
         "reason_compstak":
-            {"p": 1, "useFLG": 1},
+            {"p": 1, "useFLG": 1,"cache":1},
         "reason_talent_score":
-            {"p":7, "useFLG":1 },
+            {"p":7, "useFLG":1 ,"cache":1},
         "reason_price_based":
-            {"p":2, "useFLG":1},
+            {"p":2, "useFLG":1,"cache":1},
     },
     "cid":"duns_number",
     "bid":"atlas_location_uuid",

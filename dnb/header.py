@@ -92,7 +92,8 @@ hdargs = {
         "lr":0.01,
     },
     "dnb_dnn_embedding_exe":"get_embedding_feature_region.py",
-    "dnb_dnn_model_based_exe":"main_location_intelligence_region_based_reason.py"
+    "dnb_dnn_model_based_exe":"main_location_intelligence_region_based_reason.py",
+    "dnb_data_normalizaiton_with_param_exe":"step003_get_csv_of_normalized_data_additonaly_ww.py"
 }
 
 

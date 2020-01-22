@@ -483,7 +483,7 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, **kwargs):
                                               matching_col=matching_col, reason_col_name=sub_reason_col_name,
                                               bid=bid, cid=cid, cname='business_name')
     sub_sspd = recall_com5_ext.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
-                                                                       reason='This location has a tenant company(%s) which is in the same industry as your company.')
+                                                                       reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.')
     # explanar
     sub_sspd = sspd.merge(sub_sspd[[cid, bid]], on=[cid, bid], suffixes=sfx)
     print('Shrinkage ratio: %1.2f' % (len(sub_sspd) / len(sspd)))

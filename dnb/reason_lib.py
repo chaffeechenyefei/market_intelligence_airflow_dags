@@ -171,13 +171,30 @@ def data_merge_for_all_cities():
     print('dnb_atlas score saved...')
 
     add_info_dat = pd.read_csv(pj(datapath_mid, salesforce_dnb_info_file), index_col=0)[
-        ['sfdc_account_id', cid,'account_name','company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
+        ['sfdc_account_id', cid, 'account_name', 'company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
 
-    dfs = dfs.merge(add_info_dat,on=cid,suffixes=sfx)
+    dfs = dfs.merge(add_info_dat, on=cid, suffixes=sfx)
+
+    dfs['selected'] = dfs['duns_number'].apply(lambda x: True if int(x) in [8900629, 965324655, 63407694, 97916953,
+                                                                            41311187, 80282091, 968544028, 81116354,
+                                                                            92952713,
+                                                                            80582771, 75824558, 42472380, 42019874,
+                                                                            80762681, 965522118,
+                                                                            65786502, 72148831, 80660916, 81209201,
+                                                                            196532191, 47132640,
+                                                                            43271786, 796371933, 81009915,
+                                                                            872951269, 80614333, 80180758, 51631832,
+                                                                            74157331, 80775063,
+                                                                            13895459, 80388989, 80482577,
+                                                                            21588858, 78521935, 80385047,
+                                                                            78777722, 78777721, 835524919, 96733699,
+                                                                            39590514,
+                                                                            177265824, 80414232, 78777764,
+                                                                            ] else False)
 
     dfs = dfs[
         ['sfdc_account_id', 'account_name', 'building_id', bid, 'similarity', 'note', 'algorithm', cid, 'company_name',
-         'city', 'zip_code', 'state', 'longitude', 'latitude']]
+         'city', 'zip_code', 'state', 'longitude', 'latitude','selected']]
 
     today = datetime.date.today()
     dfs.to_csv('recommendation_reason_%s.csv'%str(today),index=False)

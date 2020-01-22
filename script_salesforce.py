@@ -67,7 +67,7 @@ if __name__ == '__main__':
         fid:'sfdc_account_id',
     })
 
-    sfdnb_lst = sfdnb_lst.drop_duplicates([fid, cid, 'city'], keep='first').reset_index()
+    sfdnb_lst = sfdnb_lst.drop_duplicates(['sfdc_account_id', cid, 'city'], keep='first').reset_index()
     print('Second Shrinkage: %d'%len(sfdnb_lst))
     sfdnb_lst.to_csv(pj(datapath_mid,'salesforce_acc_duns_info.csv'))
 

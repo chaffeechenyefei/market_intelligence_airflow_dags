@@ -953,7 +953,7 @@ class sub_rec_similar_company_v2(object):
         if len(total_result) > 0:
             result = pd.concat(total_result, axis=0, sort=False)
         else:
-            result = result[[cid,bid,reason_col_name]]
+            result = pd.DataFrame(columns=[cid,bid,reason_col_name])
         pbar.close()
         # print('pairs %d' % len(result))
         return result

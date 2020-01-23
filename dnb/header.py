@@ -35,6 +35,8 @@ compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
 compstak_dnb_match_file = 'relation_dnb_compstak_0120.csv'
 salesforce_dnb_file = 'salesforce_comp_city_from_opp.csv'
 salesforce_dnb_info_file = 'salesforce_acc_duns_info.csv'
+salesforce_dnb_match_file = 'relation_dnb_account_0120.csv'
+demand_file = 'demand_signals_191110.csv'
 
 kwargs_key = 'task_instance'
 
@@ -44,27 +46,30 @@ hdargs = {
     "ls_card":"location_scorecard_200106.csv",
     "apps":"_200106.csv",
     "otversion":"_200106.csv",
+    "jsonFLG":1,
     "reason_col_name":{
         "reason_similar_biz":
-            {"p":4,"useFLG":1,"cache":1},
+            {"p":4,"useFLG":1,"cache":1,"rsKey":"Additional Reasons"},
         "reason_location_based":
-            {"p":8,"useFLG":1,"cache":1},
+            {"p":8,"useFLG":0,"cache":1, "rsKey":"Additional Reasons"},
         "reason_model_based":
-            {"p":10,"useFLG":0,"cache":1},
+            {"p":10,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_similar_location":
-            {"p":9,"useFLG":0,"cache":1},
+            {"p":9,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_similar_company":
-            {"p":6,"useFLG":0,"cache":1},
+            {"p":6,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_close_2_current_location":
-            {"p":5,"useFLG":1,"cache":1},
+            {"p":5,"useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
         "reason_inventory_bom":
-            {"p": 3, "useFLG": 1,"cache":1},
+            {"p": 3, "useFLG": 0,"cache":1,"rsKey":"Demand Signals"},
         "reason_compstak":
-            {"p": 1, "useFLG": 1,"cache":1},
+            {"p": 1, "useFLG": 0,"cache":1,"rsKey":"Portfolio signal"},
         "reason_talent_score":
-            {"p":7, "useFLG":1 ,"cache":1},
+            {"p":7, "useFLG":0 ,"cache":1,"rsKey":"Additional Reasons"},
         "reason_price_based":
-            {"p":2, "useFLG":1,"cache":1},
+            {"p":2, "useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
+        "reason_demand_x_inventory":
+            {"p":0, "useFLG":1 , "cache":1,"rsKey":"Demand Signals"},
     },
     "cid":"duns_number",
     "bid":"atlas_location_uuid",

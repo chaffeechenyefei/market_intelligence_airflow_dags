@@ -9,8 +9,11 @@ from math import *
 import tqdm
 import json
 import datetime
+from dnb.data_loader import data_process
+from dnb.header import hdargs
 
 pjoin = os.path.join
+sfx = ['','_right']
 
 
 # function_base
@@ -521,6 +524,42 @@ def merge_str_2_json_rowise_reformat(row, src_cols: list, jsKey='reasons', targe
     jsRs[jsKey] = nreason
     return json.dumps(jsRs)
 
+def merge_str_2_json_rowise_reformat_v2(row, src_cols: list, jsKey='reasons', target_phss=[]):
+    """
+    row in dataframe
+    output json style string
+    """
+    jsRs = {}
+    jsRs[jsKey] = []
+    nreason = {}
+    for src_col in src_cols:
+        rs = str(row[src_col])
+
+        cur_reason = []
+        if rs != '':
+            need_reformat = False
+            for target_phs in target_phss:
+                if rs.startswith(target_phs):
+                    need_reformat = True
+                    replace_phs = target_phs
+
+            if need_reformat:
+                rs = rs.replace(replace_phs, '')
+                multi_row_reason = rs.rstrip('.').split('. ')
+                multi_row_reason = [c + '.' for c in multi_row_reason]
+                cur_reason = cur_reason + multi_row_reason
+            else:
+                cur_reason.append(rs)
+
+            if len(cur_reason) > 0:
+                rsKey = hdargs["reason_col_name"][src_col]["rsKey"]
+                if rsKey not in nreason.keys():
+                    nreason[rsKey] = cur_reason
+                else:
+                    nreason[rsKey] = nreason[rsKey] + cur_reason
+
+    jsRs[jsKey] = nreason
+    return json.dumps(jsRs)
 
 # ======================================================================================================================
 
@@ -1077,6 +1116,43 @@ class sub_rec_inventory_bom(object):
         else:
             clpair[reason_col] = ''
         return clpair[[cid, bid, reason_col]]
+
+
+class sub_rec_demand_x_inventory(object):
+    def __init__(self, root_path,invdbname,demdbname,sfxdnbname,reason='The location available space(%d) can meet your requirement(%d).',cid='duns_number',bid='atlas_location_uuid',fid='account_id'):
+        dtloader = data_process(root_path=root_path)
+        dtloader.load_demand(db='',dbname=demdbname)
+        demand_dat = dtloader.deduplicate_demand_tb(db='',save_dbname='')
+        demand_col = dtloader.demand_col
+
+        inv_dat = dtloader.load_inventory(db='', dbname=invdbname)
+        inv_col = dtloader.inv_col
+        assert(bid==inv_col['bid'])
+        inv_dat = inv_dat[[bid,inv_col['cap']]].rename(columns={inv_col['cap']:'cap'})
+
+        sfdnb = pd.read_csv(pjoin(root_path,sfxdnbname),index_col=0)[[cid,fid]]
+        dnb_demand = sfdnb.merge(demand_dat, left_on=fid, right_on=demand_col['acc_col'], suffixes=sfx)[
+            [cid, demand_col['req_desk']]].rename(columns={demand_col['req_desk']: 'req_desk'})
+
+        dnb_demand = dnb_demand.drop_duplicates([cid, 'req_desk'], keep='last')
+
+        self.dnb_demand = dnb_demand
+        self.inv_dat = inv_dat
+        self.cid = cid
+        self.bid = bid
+        self.reason = reason
+
+    def get_reason(self, sspd, reason_col=''):
+        bid = self.bid
+        cid = self.cid
+        clpair = sspd.merge(self.inv_dat,on=bid,suffixes=sfx)
+        clpair = clpair.merge(self.dnb_demand,on=cid,suffixes=sfx)
+        if clpair.empty():
+            clpair = pd.DataFrame(columns=[cid,bid,reason_col])
+        else:
+            clpair[reason_col] = clpair.apply(lambda x: self.reason%(int(x['req_desk']),int(x['cap'])) if int(x['req_desk']) <= int(x['cap']) else '' , axis=1 )
+        return clpair[[cid,bid,reason_col]]
+
 
 
 ## CompStak

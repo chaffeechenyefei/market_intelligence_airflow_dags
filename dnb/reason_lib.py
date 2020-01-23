@@ -117,10 +117,16 @@ def prod_all_reason_in_one_func(ind_city, **context):
     sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
     sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason]
     if len(sample_sspd) > 0:
-        sample_sspd['reason'] = sample_sspd.apply(
-            lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
-                                                       target_phss=['Location similar in: ', 'Implicit reason: ']),
-            axis=1)
+        if hdargs["jsonFLG"]:
+            sample_sspd['reason'] = sample_sspd.apply(
+                lambda x: merge_str_2_json_rowise_reformat_v2(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
+                                                           target_phss=['Location similar in: ', 'Implicit reason: ']),
+                axis=1)
+        else:
+            sample_sspd['reason'] = sample_sspd.apply(
+                lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
+                                                           target_phss=['Location similar in: ', 'Implicit reason: ']),
+                axis=1)
     else:
         sample_sspd['reason'] = ''
 
@@ -629,7 +635,9 @@ def xcom_reason_location_based(sub_reason_col_name, sub_reason_file_name ,var_ta
         return
     sub_loc_feat = get_xcom_var(ti, var_task_space, 'sub_loc_feat')
     sub_loc_feat_ww = get_xcom_var(ti, var_task_space, 'sub_loc_feat_ww')
+    sspd = get_xcom_var(ti, var_task_space, 'sspd')
     kwargs = dict(
+        sspd=sspd,
         sub_loc_feat = sub_loc_feat,
         sub_loc_feat_ww = sub_loc_feat_ww,
     )
@@ -664,7 +672,9 @@ def xcom_reason_model_based(sub_reason_col_name, sub_reason_file_name ,var_task_
         return
     dlsub_ssfile_db_name = get_xcom_var(ti,var_task_space, 'dlsub_ssfile_db')
     total_pairs_num = get_xcom_var(ti, var_task_space, 'total_pairs_num')
+    sspd = get_xcom_var(ti, var_task_space, 'sspd')
     kwargs = dict(
+        sspd=sspd,
         dlsub_ssfile_db = dlsub_ssfile_db_name,
         total_pairs_num = total_pairs_num,
     )
@@ -700,8 +710,39 @@ def xcom_reason_price_based(sub_reason_col_name, sub_reason_file_name ,var_task_
 
     compstak_db_city = get_xcom_var(ti,var_task_space, 'compstak_db_city')
     compstak_dnb_city = get_xcom_var(ti, var_task_space, 'compstak_dnb_city')
+    sspd = get_xcom_var(ti, var_task_space, 'sspd')
     kwargs = dict(
+        sspd = sspd,
         compstak_db_city = compstak_db_city,
         compstak_dnb_city = compstak_dnb_city,
     )
     reason_price_based(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
+
+
+def reason_demand_x_inventory(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    print('Demand x inventory')
+    sspd = kwargs['sspd']
+    total_pairs_num = len(sspd)
+    sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
+
+    recall_com = sub_rec_demand_x_inventory(root_path=datapath,invdbname=inventory_file,
+                                            sfxdnbname=salesforce_dnb_match_file,demdbname=demand_file,
+                                            reason='The location available space(%d) can meet your requirement(%d).')
+    sub_pair = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name)
+
+    print('==> Coverage: %1.2f' % (len(sub_pair) / total_pairs_num))
+    if len(sub_pair) >0:
+        sub_pair.to_csv(sub_reason_file)
+
+def xcom_reason_demand_x_inventory(sub_reason_col_name, sub_reason_file_name ,var_task_space, **context):
+    print('Demand x inventory')
+    ti = context.get("ti")
+    skpFLG = get_xcom_var(ti, var_task_space, 'skp_FLG')
+    if skpFLG:
+        print('skipped!')
+        return
+    sspd = get_xcom_var(ti, var_task_space, 'sspd')
+    kwargs = dict(
+        sspd = sspd,
+    )
+    reason_demand_x_inventory(sub_reason_col_name=sub_reason_col_name, sub_reason_file_name=sub_reason_file_name, **kwargs)

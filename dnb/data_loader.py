@@ -78,6 +78,7 @@ class data_process(object):
         self.inv_dat = inv_dat
         if not self.sil:
             print('%d atlas loaded' % len(inv_dat))
+        return inv_dat
 
     def load_talent(self, db='talent', dbname='talent_score_v0_01-03-2020.csv'):
         db_path = pj(self.root_path, db)
@@ -163,7 +164,9 @@ class data_process(object):
         de_demand_dat = de_demand_dat.sort_values([acc_col, 'time']).drop_duplicates([acc_col], keep='last')
         if not self.sil:
             print('%d unique acc demands remains' % len(de_demand_dat))
-        de_demand_dat.to_csv(pj(db_path, save_dbname))
+        if save_dbname:
+            de_demand_dat.to_csv(pj(db_path, save_dbname))
+        return de_demand_dat
 
     def load_location_scorecard_msa(self, db='', dbname='location_scorecard_200106.csv'):
         db_path = pj(self.root_path, db)

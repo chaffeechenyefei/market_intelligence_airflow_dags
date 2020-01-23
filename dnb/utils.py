@@ -1147,7 +1147,7 @@ class sub_rec_demand_x_inventory(object):
         cid = self.cid
         clpair = sspd.merge(self.inv_dat,on=bid,suffixes=sfx)
         clpair = clpair.merge(self.dnb_demand,on=cid,suffixes=sfx)
-        if clpair.empty():
+        if clpair.empty:
             clpair = pd.DataFrame(columns=[cid,bid,reason_col])
         else:
             clpair[reason_col] = clpair.apply(lambda x: self.reason%(int(x['req_desk']),int(x['cap'])) if int(x['req_desk']) <= int(x['cap']) else '' , axis=1 )

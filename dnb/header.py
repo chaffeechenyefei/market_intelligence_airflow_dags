@@ -51,23 +51,23 @@ hdargs = {
         "reason_similar_biz":
             {"p":4,"useFLG":1,"cache":1,"rsKey":"Additional Reasons"},
         "reason_location_based":
-            {"p":8,"useFLG":0,"cache":1, "rsKey":"Additional Reasons"},
+            {"p":8,"useFLG":1,"cache":1, "rsKey":"Additional Reasons"},
         "reason_model_based":
             {"p":10,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_similar_location":
             {"p":9,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_similar_company":
-            {"p":6,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
+            {"p":6,"useFLG":1,"cache":1,"rsKey":"Additional Reasons"},
         "reason_close_2_current_location":
-            {"p":5,"useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
+            {"p":5,"useFLG":1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_inventory_bom":
-            {"p": 3, "useFLG": 0,"cache":1,"rsKey":"Demand Signals"},
+            {"p": 3, "useFLG": 1,"cache":1,"rsKey":"Demand Signals"},
         "reason_compstak":
-            {"p": 1, "useFLG": 0,"cache":1,"rsKey":"Portfolio signal"},
+            {"p": 1, "useFLG": 1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_talent_score":
-            {"p":7, "useFLG":0 ,"cache":1,"rsKey":"Additional Reasons"},
+            {"p":7, "useFLG":1 ,"cache":1,"rsKey":"Additional Reasons"},
         "reason_price_based":
-            {"p":2, "useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
+            {"p":2, "useFLG":1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_demand_x_inventory":
             {"p":0, "useFLG":1 , "cache":1,"rsKey":"Demand Signals"},
     },

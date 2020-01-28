@@ -33,12 +33,18 @@ def load_salesforce_dnb_match(db='' ,table='relation_dnb_account_0120.csv'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     arg = parser.add_argument
-    arg('--dnb_acc', default='relation_dnb_account_0120.csv')
+    arg('--dnb_acc', default='')
     arg('--dbname',default='reason_table')
 
     args = parser.parse_args()
 
-    sfdnb = load_salesforce_dnb_match(db='',table=args.dnb_acc)
+    if args.dnb_acc:
+        dnb_acc = args.dnb_acc
+    else:
+        dnb_acc = salesforce_dnb_match_file
+    print('Using dnb_acc:%s'%dnb_acc)
+
+    sfdnb = load_salesforce_dnb_match(db='',table=dnb_acc)
 
     dedup_sfdnb = sfdnb.drop_duplicates([fid,cid,city], keep='first').reset_index()[[fid,fname,cid,city]]
 
@@ -69,7 +75,7 @@ if __name__ == '__main__':
 
     sfdnb_lst = sfdnb_lst.drop_duplicates(['sfdc_account_id', cid, 'city'], keep='first').reset_index()
     print('Second Shrinkage: %d'%len(sfdnb_lst))
-    sfdnb_lst.to_csv(pj(datapath_mid,'salesforce_acc_duns_info.csv'))
+    sfdnb_lst.to_csv(pj(datapath_mid,salesforce_dnb_info_file))
 
     print('Done')
 

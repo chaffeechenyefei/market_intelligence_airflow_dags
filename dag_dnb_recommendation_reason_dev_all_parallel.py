@@ -80,7 +80,7 @@ for ind_city in range(len(citylongname)):
         },
         dag=dag,
     )
-    main_op >> exe_op >> merging_all_op
+    main_op >> exe_op >> merging_all_op >> end_op
 #     prev_city_op_tail >> exe_op
 #     prev_city_op_tail = exe_op
 #

@@ -35,7 +35,7 @@ compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
 compstak_dnb_match_file = 'relation_dnb_compstak_0120.csv'
 salesforce_dnb_file = 'salesforce_comp_city_from_opp.csv'
 salesforce_dnb_info_file = 'salesforce_acc_duns_info.csv'
-salesforce_dnb_match_file = 'relation_dnb_account_0120.csv'
+salesforce_dnb_match_file = 'relation_dnb_account_0128.csv'
 demand_file = 'demand_signals_191110.csv'
 
 kwargs_key = 'task_instance'

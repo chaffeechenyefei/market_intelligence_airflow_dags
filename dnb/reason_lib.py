@@ -406,7 +406,7 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
     invdb = pd.read_csv(pjoin(datapath, inventory_file))
 
     recall_com = sub_rec_inventory_bom(invdb=invdb,
-                                        reason='Inventory reason: The max reservable desks( %d ) of this location can hold your company.',
+                                        reason='Inventory reason: The max reservable desks( %d ) of this location can hold your company according to DnB.',
                                         bid=bid, cid=cid)
     sub_inventory_db = recall_com.get_reason(sspd=sspd, comp_feat=comp_feat, comp_col='emp_here',
                                               inv_col='max_reservable_capacity', reason_col=sub_reason_col_name)

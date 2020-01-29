@@ -13,9 +13,14 @@ def get_xcom_var(ti, task_id, key):
 
 
 def prod_all_reason_in_one_func(ind_city, **context):
+    """
+    Doing all the reasonings in one function sequentially.
+    :param ind_city: 
+    :param context: 
+    :return: 
+    """
     sspd_file = pjoin(datapath_mid, ssfile[ind_city])
     if not os.path.isfile(sspd_file):
-        skpFLG = True
         print('skipped')
         return
 
@@ -110,7 +115,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
                 match_key = list(set([bid, cid]) & set(reason_db.columns))  # sometimes only location uuid is given
                 sample_sspd = sample_sspd.merge(reason_db, on=match_key, how='left', suffixes=sfx)
         else:
-            print('%s skipped because no file is found in %s' % (reason_name, str(db_path)))
+            print('%s skipped because no file is found in %s or not cached.' % (reason_name, str(db_path)))
 
     sample_sspd = sample_sspd.fillna('')
     print('Json format transforming...')
@@ -146,6 +151,10 @@ def prod_all_reason_in_one_func(ind_city, **context):
     print('==> Done')
 
 def data_merge_for_all_cities():
+    """
+    Merge all the files of cities into one and format it for output.
+    :return: 
+    """
     print('merging results')
     dfs = []
     for filename in rsfile:
@@ -169,10 +178,10 @@ def data_merge_for_all_cities():
     col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid]
     dfs = dfs[col_list]
 
-    if TEST_FLG:
-        dfs.to_csv( pj( datapath,'result/sub_all_similarity_multi_test'+ hdargs["otversion"]), index=False)
+    if TEST_FLG:#result/sub_all_similarity_multi[_test][_200106.csv]
+        dfs.to_csv( pj( datapath,hdargs["final_file_name"] + '_test' + hdargs["otversion"]), index=False)
     else:
-        dfs.to_csv(pj(datapath,'result/sub_all_similarity_multi'+ hdargs["otversion"]), index=False)
+        dfs.to_csv(pj(datapath, hdargs["final_file_name"]+ hdargs["otversion"]), index=False)
 
     print('dnb_atlas score saved...')
 
@@ -319,10 +328,18 @@ def data_prepare(ind_city,**context):
     set_xcom_var(ti, key='total_pairs_num', value=total_pairs_num)
 
 def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,**kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Is there a company with similar biz inside the location?')
     sspd = kwargs['sspd']
     comp_feat = kwargs['comp_feat']
     sub_comp_loc = kwargs['sub_comp_loc']
+    jsKey = 'Additional Reasons'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -336,7 +353,8 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,**kwargs):
                                           bid=bid, cid=cid, cname='business_name')
 
     sub_pairs = recall_com.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
-                                                                    reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.')
+                                                                    reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.',
+                                                                   jsFLG=False,jsKey=jsKey)
     # explanar
     print('==> Coverage: %1.2f' % (len(sub_pairs) / total_pairs_num))
     if len(sub_pairs) > 0:
@@ -362,16 +380,24 @@ def xcom_reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,var_task
     reason_similar_biz(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Close to current location')
     sspd = kwargs['sspd']
     comp_feat = kwargs['comp_feat']
     loc_feat = kwargs['loc_feat']
+    jsKey = 'Portfolio signal'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
     recall_com = sub_rec_location_distance(reason_col_name=sub_reason_col_name)
-    sub_close_loc = recall_com.get_reason(sspd=sspd, loc_feat=loc_feat, comp_feat=comp_feat, dist_thresh=3.2e3)
+    sub_close_loc = recall_com.get_reason(sspd=sspd, loc_feat=loc_feat, comp_feat=comp_feat, dist_thresh=3.2e3,jsFLG=False,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_close_loc) / total_pairs_num))
     if len(sub_close_loc) > 0:
@@ -396,9 +422,17 @@ def xcom_reason_close_2_current_location(sub_reason_col_name, sub_reason_file_na
     reason_close_2_current_location(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Inventory bom')
     sspd = kwargs['sspd']
     comp_feat =kwargs['comp_feat']
+    jsKey = 'Demand Signals'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -409,7 +443,7 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
                                         reason='Inventory reason: The max reservable desks( %d ) of this location can hold your company according to DnB.',
                                         bid=bid, cid=cid)
     sub_inventory_db = recall_com.get_reason(sspd=sspd, comp_feat=comp_feat, comp_col='emp_here',
-                                              inv_col='max_reservable_capacity', reason_col=sub_reason_col_name)
+                                              inv_col='max_reservable_capacity', reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
     print('==> Coverage: %1.2f' % (len(sub_inventory_db) / total_pairs_num))
     if len(sub_inventory_db):
         sub_inventory_db.to_csv(sub_reason_file)
@@ -430,8 +464,16 @@ def xcom_reason_inventory_bom(sub_reason_col_name, sub_reason_file_name ,var_tas
     reason_inventory_bom(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_talent_score(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Talent score')
     sspd = kwargs['sspd']
+    jsKey = 'Additional Reasons'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -441,7 +483,7 @@ def reason_talent_score(sub_reason_col_name, sub_reason_file_name, **kwargs):
     lscard = dataloadCls.load_location_scorecard_msa()
 
     recall_com = sub_rec_talent(talentdb=talentdb,lsdb=lscard,reason='Talent score here is %s.')
-    sub_talent_db = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name)
+    sub_talent_db = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_talent_db) / total_pairs_num))
     if len(sub_talent_db) > 0:
@@ -462,10 +504,18 @@ def xcom_reason_talent_score(sub_reason_col_name, sub_reason_file_name ,var_task
     reason_talent_score(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_compstak(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Compstak')
     sspd = kwargs['sspd']
     compstak_db_city = kwargs['compstak_db_city']
     compstak_dnb_city = kwargs['compstak_dnb_city']
+    jsKey = 'Portfolio signal'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -473,7 +523,7 @@ def reason_compstak(sub_reason_col_name, sub_reason_file_name, **kwargs):
     recall_com = sub_rec_compstak(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,
                                    reason='Compstak reason: The lease will expire in %d months.',
                                    cid=cid, bid=bid)
-    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name)
+    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
     if len(sub_compstak_db) > 0:
@@ -497,12 +547,20 @@ def xcom_reason_compstak(sub_reason_col_name, sub_reason_file_name ,var_task_spa
     reason_compstak(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_similar_company(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Is there a similar company inside the recommended location?')
     sspd = kwargs['sspd']
     comp_feat = kwargs[ 'comp_feat']
     sub_comp_loc = kwargs['sub_comp_loc']
     # comp_loc = get_xcom_var(ti, var_task_space, 'comp_loc')
     comp_feat_normed = kwargs['comp_feat_normed']
+    jsKey = 'Additional Reasons'
 
     comp_feat_col = [c for c in comp_feat_normed.columns if c not in [cid, bid,'city','label']]
     total_pairs_num = len(sspd)
@@ -527,7 +585,7 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, **kwargs):
     recall_com = sub_rec_similar_company_v2(comp_loc=sub_comp_loc, sspd=sub_sspd, thresh=0.05)
     sim_comp_name = recall_com.get_reason_batch(comp_feat=comp_feat, comp_feat_col=comp_feat_col,
                                                  comp_feat_normed=comp_feat_normed,
-                                                 reason_col_name=sub_reason_col_name, batch_size=5000)
+                                                 reason_col_name=sub_reason_col_name, batch_size=5000,jsFLG=False,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sim_comp_name) / total_pairs_num))
     if len(sim_comp_name) > 0:
@@ -559,6 +617,7 @@ def reason_similar_location(sub_reason_col_name, sub_reason_file_name, **kwargs)
     sspd =  kwargs['sspd']
     comp_loc = kwargs['comp_loc']
     loc_feat = kwargs['loc_feat']
+    jsKey = 'Additional Reasons'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)

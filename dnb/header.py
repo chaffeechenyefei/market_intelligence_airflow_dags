@@ -80,6 +80,7 @@ hdargs = {
     "test_db":"tmp_table",
     "dev_db":"reason_table",
     "test":0, #whether using test_db(space/folder) or dev_db
+    "final_file_name":"result/sub_all_similarity_multi",
 
     "do_data_split":0, #whether doing data split
     "ratio_data_split":0.9,

@@ -395,19 +395,21 @@ class sub_rec_similar_company(object):
     def get_candidate_location_for_company_fast(self, query_comp_loc,
                                                 reason='similar company(%s) inside with same type of industry(%s)',
                                                 jsFLG=False, jsKey='A'):
+        cid = self.cid
+        bid = self.bid
         sub_pairs = pd.merge(query_comp_loc[[self.cid, self.bid, self.matching_col]], self.loc_type,
                              on=[self.bid, self.matching_col], suffixes=['', '_right'])
         sub_pairs = sub_pairs.dropna()
         if len(sub_pairs) > 0:
+            sub_pairs[self.reason_col_name] = sub_pairs.apply(
+                lambda x: reason % (str(x[self.cname]), str(x[self.matching_col])), axis=1)
             if jsFLG:
-                sub_pairs[self.reason_col_name] = sub_pairs.apply(
-                    lambda x: json.dumps({jsKey: [(reason % (str(x[self.cname]), str(x[self.matching_col])))]}), axis=1)
-            else:
-                # sub_pairs[self.reason_col_name] = sub_pairs[self.cname].apply(lambda x: reason % str(x))
-                sub_pairs[self.reason_col_name] = sub_pairs.apply(
-                    lambda x: reason % (str(x[self.cname]), str(x[self.matching_col])), axis=1)
+                sub_pairs[self.reason_col_name] = sub_pairs[self.reason_col_name].apply(
+                    lambda x: json.dumps({jsKey: [str(x)]})
+                )
         else:
-            sub_pairs[self.reason_col_name] = ''
+            sub_pairs = pd.DataFrame(columns=[cid,bid,self.reason_col_name])
+            # sub_pairs[self.reason_col_name] = ''
         return sub_pairs
 
 
@@ -856,6 +858,7 @@ class feature_translate(object):
 # =======================================================================================================================
 class sub_rec_similar_location(object):
     """
+    json++
     In which feature, those tow locations are similar with each other.
     """
 
@@ -881,6 +884,9 @@ class sub_rec_similar_location(object):
         if self.reason_col_name not in loc_comp_loc.columns:
             loc_comp_loc[self.reason_col_name] = ''
 
+        inner_sep = '|'
+        outer_sep = '. '
+
         for c in self.dummy_col_name:
             ret_reason = self.reason_translator.getItem(gvkey=c)
             if ret_reason['status']:
@@ -891,7 +897,7 @@ class sub_rec_similar_location(object):
                 tmp['reason'] = ret_reason['item'][1]
                 # tmp['reason'] = tmp['reason']
                 loc_comp_loc[[self.reason_col_name]] = \
-                    loc_comp_loc[self.reason_col_name].str.cat(tmp['reason'], join='left', sep='|', na_rep='')
+                    loc_comp_loc[self.reason_col_name].str.cat(tmp['reason'], join='left', sep=inner_sep, na_rep='')
         for c in self.cont_col_name:
             ret_reason = self.reason_translator.getItem(gvkey=c)
             if ret_reason['status']:
@@ -900,14 +906,14 @@ class sub_rec_similar_location(object):
                 tmp = tmp.loc[abs(tmp[c] - tmp[ca]) / (tmp[ca] + 1e-5) < self.threshold, :]
                 tmp['reason'] = ret_reason['item'][1]
                 loc_comp_loc[[self.reason_col_name]] = \
-                    loc_comp_loc[self.reason_col_name].str.cat(tmp['reason'], join='left', sep='|', na_rep='')
+                    loc_comp_loc[self.reason_col_name].str.cat(tmp['reason'], join='left', sep=inner_sep, na_rep='')
 
         def clean(text):  # problem caused by str.cat. Thus clean is a must.
-            clean_str = '. '.join([c for c in text.split('|') if c != ''])
+            clean_str = outer_sep.join([c for c in text.split(inner_sep) if c != ''])
             return clean_str
 
         def cnter(text):
-            ns = text.count('.')
+            ns = text.count(outer_sep.rstrip())
             return ns
 
         loc_comp_loc[self.reason_col_name] = loc_comp_loc[self.reason_col_name].apply(lambda text: clean(text))
@@ -920,8 +926,13 @@ class sub_rec_similar_location(object):
             loc_comp_loc = (loc_comp_loc.loc[idx]).reset_index()
 
         loc_comp_loc = loc_comp_loc[[self.bid, self.cid, self.reason_col_name]]
-        loc_comp_loc = loc_comp_loc[loc_comp_loc[self.reason_col_name] != '']
-        loc_comp_loc[[self.reason_col_name]] = reason + loc_comp_loc[self.reason_col_name] + '.'
+        loc_comp_loc = loc_comp_loc.loc[loc_comp_loc[self.reason_col_name] != '']
+        if jsFLG:
+            loc_comp_loc[self.reason_col_name] = loc_comp_loc[self.reason_col_name].apply(
+                lambda x: json.dumps({ jsKey: [ phs + outer_sep.rstrip() for phs in x.split(outer_sep) if phs != '']})
+            )
+        else:
+            loc_comp_loc[[self.reason_col_name]] = reason + loc_comp_loc[self.reason_col_name] + outer_sep
         return loc_comp_loc
 
 
@@ -1096,12 +1107,13 @@ class sub_rec_location_distance(object):
             loc_comp_loc = pd.DataFrame(columns=[cid,bid,'geo_dist'])
         loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
         # loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + str(round(dist_thresh / 1e3, 1)) + 'km). '
+        loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(
+            loc_comp_loc['geo_dist'].astype(float) / 1e3, 1).astype(str) + 'km). '
         if jsFLG:
-            loc_comp_loc[self.reason_col_name] = loc_comp_loc['geo_dist'].apply(
-                lambda x: json.dumps( {jsKey:['Recommended location is close to current location(<' + str(round(float(x)/1e3,1)) + 'km).']} )
+            loc_comp_loc[self.reason_col_name] = loc_comp_loc[self.reason_col_name].apply(
+                lambda x: json.dumps( {jsKey: [str(x)] })
             )
-        else:
-            loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(loc_comp_loc['geo_dist'].astype(float)/1e3,1).astype(str) + 'km). '
+
         return loc_comp_loc[[bid, cid, self.reason_col_name]]
 
 
@@ -1127,13 +1139,12 @@ class sub_rec_inventory_bom(object):
                                                                                                             suffixes=sfx)
         clpair = clpair.fillna(0)
         if len(clpair) > 0:
+            clpair[reason_col] = clpair.apply(
+                lambda x: (self.reason % int(x[inv_col])) if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
             if jsFLG:
-                clpair[reason_col] = clpair.apply(lambda x: json.dumps(
-                    {jsKey:[(self.reason % int(x[inv_col])) if int(x[comp_col]) <= int(x[inv_col]) else '']}
-                ), axis=1)
-            else:
-                clpair[reason_col] = clpair.apply(
-                    lambda x: (self.reason % int(x[inv_col])) if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
+                clpair[reason_col] = clpair[reason_col].apply(
+                    lambda x: json.dumps( {jsKey:[str(x)]} )
+                )
         else:
             # clpair[reason_col] = ''
             clpair = pd.DataFrame(columns=[cid,bid,reason_col])
@@ -1164,7 +1175,7 @@ class sub_rec_demand_x_inventory(object):
         self.bid = bid
         self.reason = reason
 
-    def get_reason(self, sspd, reason_col=''):
+    def get_reason(self, sspd, reason_col='',jsKey='A',jsFLG=False):
         bid = self.bid
         cid = self.cid
         clpair = sspd.merge(self.inv_dat,on=bid,suffixes=sfx)
@@ -1174,6 +1185,9 @@ class sub_rec_demand_x_inventory(object):
             clpair = pd.DataFrame(columns=[cid,bid,reason_col])
         else:
             clpair[reason_col] = clpair.apply(lambda x: self.reason%(int(x['req_desk']),int(x['cap'])) if int(x['req_desk']) <= int(x['cap']) else '' , axis=1 )
+
+        if jsFLG:
+            clpair[reason_col] = clpair[reason_col].apply(lambda x: json.dumps({jsKey: [str(x)]}) )
         return clpair[[cid,bid,reason_col]]
 
 
@@ -1215,6 +1229,9 @@ def translate_compstak_date(exp_date: str, cur_date):
 
 
 class sub_rec_price(object):
+    """
+    json++
+    """
     def __init__(self, cpstkdb, cpstkdnb,invdb,
                  reason='The price of wework location is cheaper than your current location.',
                  bid='atlas_location_uuid',
@@ -1233,7 +1250,7 @@ class sub_rec_price(object):
             .drop_duplicates([bid], keep='last')
         self.sqft_per_desk = 20
 
-    def get_reason(self, sspd, reason_col='compstak'):
+    def get_reason(self, sspd, reason_col='compstak',jsFLG=False,jsKey='A'):
         bid = self.bid
         cid = self.cid
         sfx = ['', '_right']
@@ -1247,6 +1264,10 @@ class sub_rec_price(object):
             clpair[reason_col] = clpair.apply(
                 lambda x: self.reason if float(x[cpstk_price]) * self.sqft_per_desk >= float(x[inv_price]) else ''
                 , axis=1)
+            if jsFLG:
+                clpair[reason_col] = clpair[reason_col].apply(
+                    lambda x: {jsKey:[x]}
+                )
         else:
             clpair[reason_col] = ''
         return clpair[[cid, bid, reason_col]]
@@ -1281,13 +1302,13 @@ class sub_rec_compstak(object):
         self.db = self.db.sort_values([cid, 'month_remain']) \
             .drop_duplicates([cid], keep='last')
 
+        self.db[reason_col] = self.db['month_remain'].apply(
+            lambda x: self.reason % int(x) if x > 0 else ''
+        )
+
         if jsFLG:
-            self.db[reason_col] = self.db['month_remain'].apply(
-                lambda x: json.dumps({jsKey:[ self.reason % int(x) if x > 0 else '' ]})
-            )
-        else:
-            self.db[reason_col] = self.db['month_remain'].apply(
-                lambda x: self.reason % int(x) if x > 0 else ''
+            self.db[reason_col] = self.db[reason_col].apply(
+                lambda x: json.dumps( {jsKey:[str(x)]} )
             )
 
         clpair = clpair.merge(self.db[[cid, reason_col]], on=cid, suffixes=sfx)
@@ -1327,12 +1348,12 @@ class sub_rec_talent(object):
                 phs = 'a bit low'
             return phs
 
+        taldb[reason_col] = taldb[talent_score].apply(lambda x: (self.reason % trans_score(x)))
         if jsFLG:
-            taldb[reason_col] = taldb[talent_score].apply(
-                lambda x: json.dumps( {jsKey:[(self.reason % trans_score(x))]} )
+            taldb[reason_col] = taldb[reason_col].apply(
+                lambda x: json.dumps( {jsKey:[str(x)]} )
             )
-        else:
-            taldb[reason_col] = taldb[talent_score].apply(lambda x: (self.reason % trans_score(x)))
+
         sspd = sspd.merge(self.lscard, on=bid, suffixes=sfx)
         sspd = sspd.merge(taldb, on=[city_col, state_col], suffixes=sfx)
 

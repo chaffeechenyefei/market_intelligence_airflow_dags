@@ -54,6 +54,9 @@ if __name__ == '__main__':
 
     sfdnb_lst = []
     for ind_city,cur_city_name in enumerate(citylongname):
+        """
+        Here filter is a must. Because not all the duns_number is valid. Need to check why?
+        """
         print('## %s ##'%cur_city_name )
         comp_file = cfile[ind_city]
         comp_dat = pd.read_csv( pj(datapath,comp_file))[[cid,city,'physical_zip_all','msa','latitude','longitude','business_name']]

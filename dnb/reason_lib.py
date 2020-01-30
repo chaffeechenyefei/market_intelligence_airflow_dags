@@ -613,6 +613,13 @@ def xcom_reason_similar_company(sub_reason_col_name, sub_reason_file_name ,var_t
     reason_similar_company(sub_reason_col_name=sub_reason_col_name, sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_similar_location(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Is the recommended location similar with its current one?')
     sspd =  kwargs['sspd']
     comp_loc = kwargs['comp_loc']
@@ -627,7 +634,7 @@ def reason_similar_location(sub_reason_col_name, sub_reason_file_name, **kwargs)
     recall_com = sub_rec_similar_location(cont_col_name=cont_col_nameL, dummy_col_name=dummy_col_nameL,
                                            reason_col_name=sub_reason_col_name, cid=cid, bid=bid)
     loc_comp_loc = recall_com.get_reason(sspd=sspd, comp_loc=comp_loc, loc_feat=loc_feat,
-                                          reason='Location similar in: ', multi_flag=True)
+                                          reason='Location similar in: ', multi_flag=True, jsFLG=False,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(loc_comp_loc) / total_pairs_num))
     if len(loc_comp_loc) >0:
@@ -653,9 +660,18 @@ def xcom_reason_similar_location(sub_reason_col_name, sub_reason_file_name ,var_
     reason_similar_location(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_location_based(sub_reason_col_name, sub_reason_file_name , **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('How is region?(Location based reason)')
     sub_loc_feat = kwargs['sub_loc_feat']
     sub_loc_feat_ww = kwargs['sub_loc_feat_ww']
+    jsKey = 'Additional Reasons'
+    jsFLG = False
 
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
@@ -680,6 +696,10 @@ def reason_location_based(sub_reason_col_name, sub_reason_file_name , **kwargs):
                                              merge_col=sub_reason_col_name, sep='. ')
     sub_loc_recall[sub_reason_col_name] = 'This building is at a location with great amenities: ' + sub_loc_recall[
         sub_reason_col_name] + '. '
+    if jsFLG:
+        sub_loc_recall[sub_reason_col_name] = sub_loc_recall[sub_reason_col_name].apply(
+            lambda x: json.dumps( {jsKey: [x] } )
+        )
 
     print('==> Coverage: %1.2f' % (len(sub_loc_recall) / len(sub_loc_feat_ww)))
     if len(sub_loc_recall) > 0:
@@ -703,9 +723,18 @@ def xcom_reason_location_based(sub_reason_col_name, sub_reason_file_name ,var_ta
     reason_location_based(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_model_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Model based Reason(Implicit reason)')
     dlsub_ssfile_db_name =  kwargs['dlsub_ssfile_db']
     total_pairs_num =  kwargs['total_pairs_num']
+    jsKey = 'Additional Reasons'
+    jsFLG = False
 
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
@@ -714,8 +743,13 @@ def reason_model_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
         print('no files %s found' % dlsub_file_path)
     featTranslator = feature_translate()
     dlsubdat = pd.read_csv(dlsub_file_path, index_col=0)
-    dlsubdat[sub_reason_col_name] = dlsubdat.apply(lambda row: featTranslator.make_sense(row['merged_feat']),
-                                                   axis=1)
+    if jsFLG:
+        dlsubdat[sub_reason_col_name] = dlsubdat.apply(lambda row: json.dumps(featTranslator.make_sense_json(row['merged_feat'],jsKey=jsKey)),
+                                                       axis=1)
+    else:
+        dlsubdat[sub_reason_col_name] = dlsubdat.apply(lambda row: featTranslator.make_sense(row['merged_feat']),
+                                                       axis=1)
+
     dlsubdat = dlsubdat[[bid, cid, sub_reason_col_name]]
 
     print('==> Coverage: %1.2f' % (len(dlsubdat) / total_pairs_num))
@@ -740,10 +774,19 @@ def xcom_reason_model_based(sub_reason_col_name, sub_reason_file_name ,var_task_
     reason_model_based(sub_reason_col_name=sub_reason_col_name,sub_reason_file_name=sub_reason_file_name,**kwargs)
 
 def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Price based')
     sspd = kwargs['sspd']
     compstak_db_city = kwargs['compstak_db_city']
     compstak_dnb_city = kwargs['compstak_dnb_city']
+    jsFLG = False
+    jsKey = 'Portfolio signal'
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -753,7 +796,7 @@ def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
     recall_com = sub_rec_price(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,invdb=invdb,
                                    reason='The price of wework location is cheaper than your current location.',
                                    cid=cid, bid=bid)
-    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name)
+    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name, jsFLG=jsFLG,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
     if len(sub_compstak_db) >0:
@@ -779,15 +822,24 @@ def xcom_reason_price_based(sub_reason_col_name, sub_reason_file_name ,var_task_
 
 
 def reason_demand_x_inventory(sub_reason_col_name, sub_reason_file_name, **kwargs):
+    """
+    json++
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param kwargs: 
+    :return: 
+    """
     print('Demand x inventory')
     sspd = kwargs['sspd']
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
+    jsKey = 'Demand Signals'
+    jsFLG = False
 
     recall_com = sub_rec_demand_x_inventory(root_path=datapath,invdbname=inventory_file,
                                             sfxdnbname=salesforce_dnb_match_file,demdbname=demand_file,
                                             reason='The location available space(%d) can meet your requirement(%d).')
-    sub_pair = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name)
+    sub_pair = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,jsFLG=jsFLG,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_pair) / total_pairs_num))
     if len(sub_pair) >0:

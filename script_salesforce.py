@@ -13,7 +13,8 @@ pj = os.path.join
 cid = 'duns_number'
 bid = 'atlas_location_uuid'
 fid = 'account_id'
-fname = 'account_name'
+fname = 'account_orig_name'
+fname_formal = 'account_name'
 city = 'physical_city'
 
 
@@ -47,6 +48,7 @@ if __name__ == '__main__':
     sfdnb = load_salesforce_dnb_match(db='',table=dnb_acc)
 
     dedup_sfdnb = sfdnb.drop_duplicates([fid,cid,city], keep='first').reset_index()[[fid,fname,cid,city]]
+    dedup_sfdnb = dedup_sfdnb.rename(columns={fname:fname_formal})
 
     print('Duplicate Shrinkage: %1.2f'% (len(dedup_sfdnb)/len(sfdnb)))
 

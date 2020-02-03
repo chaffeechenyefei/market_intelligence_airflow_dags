@@ -1218,17 +1218,20 @@ class sub_rec_demand_x_inventory(object):
             else:
                 clpair = pd.DataFrame(columns=[cid, bid, reason_col])
         else:
-            if filter_col:
-                clpair[reason_col] = clpair.apply(
-                    lambda x: True if int(x['req_desk']) <= int(x['cap']) else False , axis=1 )
-            else:
-                clpair[reason_col] = clpair.apply(
+            clpair[reason_col] = clpair.apply(
                     lambda x: self.reason % (int(x['req_desk']), int(x['cap'])) if int(x['req_desk']) <= int(
                         x['cap']) else '', axis=1)
+            if filter_col:
+                clpair[filter_col] = clpair.apply(
+                    lambda x: True if int(x['req_desk']) <= int(x['cap']) else False , axis=1 )
 
         if jsFLG:
             clpair[reason_col] = clpair[reason_col].apply(lambda x: json.dumps({jsKey: [str(x)]}) )
-        return clpair[[cid,bid,reason_col]]
+
+        if filter_col:
+            return clpair[[cid,bid,reason_col,filter_col]]
+        else:
+            return clpair[[cid, bid, reason_col]]
 
 
 

@@ -133,7 +133,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
                                                            target_phss=['Location similar in: ', 'Implicit reason: ']),
                 axis=1)
 
-        filter_cols = [c for c in hdargs["filter_col_name"].keys if c in sample_sspd.columns ]
+        filter_cols = [c for c in hdargs["filter_col_name"].keys() if c in sample_sspd.columns ]
         if len(filter_cols) > 0:
             sample_sspd['filter'] = sample_sspd.apply(
                 lambda x: merge_str_2_json_for_filter( row=x, src_cols= filter_cols, jsKey='filters'),
@@ -856,7 +856,7 @@ def reason_demand_x_inventory(sub_reason_col_name, sub_reason_file_name, **kwarg
     recall_com = sub_rec_demand_x_inventory(root_path=datapath,invdbname=inventory_file,
                                             sfxdnbname=salesforce_dnb_match_file,demdbname=demand_file,
                                             reason='The location available space(%d) can meet your requirement(%d).')
-    sub_pair = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,jsFLG=jsFLG,jsKey=jsKey)
+    sub_pair = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,filter_col=filter_col,jsFLG=jsFLG,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_pair) / total_pairs_num))
     if len(sub_pair) >0:

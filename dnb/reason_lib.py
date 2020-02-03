@@ -521,7 +521,7 @@ def reason_compstak(sub_reason_col_name, sub_reason_file_name, **kwargs):
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
     recall_com = sub_rec_compstak(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,
-                                   reason='Compstak reason: The lease will expire in %d months.',
+                                   reason='Compstak reason: One of company\'s leases will expire in %d months.',
                                    cid=cid, bid=bid)
     sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
 

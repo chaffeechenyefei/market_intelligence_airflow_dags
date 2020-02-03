@@ -118,6 +118,7 @@ class data_process(object):
         if not self.sil:
             print('%d latest opp loaded' % len(op_dat))
         self.op_dat.to_csv(pj(db_path, save_dbname))
+        return self.op_dat
 
     def load_account(self, db='salesforce', dbname='accounts.csv'):
         db_path = pj(self.root_path, db)

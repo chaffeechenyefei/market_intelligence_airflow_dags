@@ -1223,7 +1223,7 @@ def translate_compstak_date(exp_date: str, cur_date):
         exp_date = datetime.datetime.strptime(str(exp_date), "%Y-%m-%d")
 
     diff_date = exp_date - cur_date
-    diff_month = ceil(diff_date.days / 28)
+    diff_month = ceil(diff_date.days / 30)
 
     return diff_month
 
@@ -1287,7 +1287,7 @@ class sub_rec_compstak(object):
         self.cid = cid
         self.bid = bid
 
-    def get_reason(self, sspd, reason_col='compstak',jsFLG=False,jsKey='A'):
+    def get_reason(self, sspd, reason_col='compstak',thresh=18,jsFLG=False,jsKey='A'):
         bid = self.bid
         cid = self.cid
         sfx = ['', '_right']
@@ -1298,9 +1298,14 @@ class sub_rec_compstak(object):
         )
 
         self.db['month_remain'] = self.db['month_remain'].astype(int)
+        self.db = self.db.loc[self.db['month_remain'] <= thresh]
+
+        self.db['month_remain'] = self.db['month_remain'].apply(
+            lambda x: x if int(x) > 0 else 1
+        )
 
         self.db = self.db.sort_values([cid, 'month_remain']) \
-            .drop_duplicates([cid], keep='last')
+            .drop_duplicates([cid], keep='first')
 
         self.db[reason_col] = self.db['month_remain'].apply(
             lambda x: self.reason % int(x) if x > 0 else ''

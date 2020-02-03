@@ -71,6 +71,12 @@ hdargs = {
         "reason_demand_x_inventory":
             {"p":0, "useFLG":1 , "cache":1,"rsKey":"Demand Signals"},
     },
+    "filter_col_name":{#'column name':'explanation'
+        "filter_price":"The price per desk lower than current effective rent.",
+        "filter_size_dnb":"The team size from dnb should be smaller than max_capacity of the building.",
+        "filter_size_demand":"The team size from demand should be smaller than max_capacity of the building.",
+        "filter_move_in_date":"filter_move_in_date",
+    },
     "cid":"duns_number",
     "bid":"atlas_location_uuid",
 

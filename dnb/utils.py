@@ -567,6 +567,26 @@ def merge_str_2_json_rowise_reformat_v2(row, src_cols: list, jsKey='reasons', ta
     jsRs[jsKey] = nreason
     return json.dumps(jsRs)
 
+
+def merge_str_2_json_for_filter(row, src_cols: list, jsKey='filters'):
+    """
+    row in dataframe
+    output json style string
+    """
+    jsFt = {}
+    nfilters = {}
+
+    for src_col in src_cols:
+        ft = bool(row[src_col])
+        ftKey = src_col
+        if ft:
+            nfilters[ftKey] = 1
+        else:
+            nfilters[ftKey] = 0
+    jsFt[jsKey] = nfilters
+    return json.dumps(jsFt)
+
+
 # ======================================================================================================================
 
 def list2json(x, sep=','):
@@ -1128,7 +1148,7 @@ class sub_rec_inventory_bom(object):
         self.cid = cid
 
     def get_reason(self, sspd, comp_feat, comp_col='emp_here', inv_col='sum_reservable_office_capacity',
-                   reason_col='inventory', jsFLG = False, jsKey = 'A'):
+                   reason_col='inventory', filter_col=None,jsFLG = False, jsKey = 'A'):
         bid = self.bid
         cid = self.cid
         sfx = ['', '_right']
@@ -1141,14 +1161,25 @@ class sub_rec_inventory_bom(object):
         if len(clpair) > 0:
             clpair[reason_col] = clpair.apply(
                 lambda x: (self.reason % int(x[inv_col])) if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
+            if filter_col:
+                clpair[filter_col] = clpair.apply(
+                lambda x: True if int(x[comp_col]) <= int(x[inv_col]) else False, axis=1
+                )
             if jsFLG:
                 clpair[reason_col] = clpair[reason_col].apply(
                     lambda x: json.dumps( {jsKey:[str(x)]} )
                 )
         else:
             # clpair[reason_col] = ''
-            clpair = pd.DataFrame(columns=[cid,bid,reason_col])
-        return clpair[[cid, bid, reason_col]]
+            if filter_col:
+                clpair = pd.DataFrame(columns=[cid,bid,reason_col,filter_col])
+            else:
+                clpair = pd.DataFrame(columns=[cid,bid,reason_col])
+
+        if filter_col:
+            return clpair[[cid, bid, reason_col,filter_col]]
+        else:
+            return clpair[[cid, bid, reason_col]]
 
 
 class sub_rec_demand_x_inventory(object):
@@ -1175,16 +1206,25 @@ class sub_rec_demand_x_inventory(object):
         self.bid = bid
         self.reason = reason
 
-    def get_reason(self, sspd, reason_col='',jsKey='A',jsFLG=False):
+    def get_reason(self, sspd, reason_col='',filter_col=None,jsKey='A',jsFLG=False):
         bid = self.bid
         cid = self.cid
         clpair = sspd.merge(self.inv_dat,on=bid,suffixes=sfx)
         clpair = clpair.merge(self.dnb_demand,on=cid,suffixes=sfx)
         clpair = clpair.fillna(0)
         if clpair.empty:
-            clpair = pd.DataFrame(columns=[cid,bid,reason_col])
+            if filter_col:
+                clpair = pd.DataFrame(columns=[cid,bid,reason_col,filter_col])
+            else:
+                clpair = pd.DataFrame(columns=[cid, bid, reason_col])
         else:
-            clpair[reason_col] = clpair.apply(lambda x: self.reason%(int(x['req_desk']),int(x['cap'])) if int(x['req_desk']) <= int(x['cap']) else '' , axis=1 )
+            if filter_col:
+                clpair[reason_col] = clpair.apply(
+                    lambda x: True if int(x['req_desk']) <= int(x['cap']) else False , axis=1 )
+            else:
+                clpair[reason_col] = clpair.apply(
+                    lambda x: self.reason % (int(x['req_desk']), int(x['cap'])) if int(x['req_desk']) <= int(
+                        x['cap']) else '', axis=1)
 
         if jsFLG:
             clpair[reason_col] = clpair[reason_col].apply(lambda x: json.dumps({jsKey: [str(x)]}) )
@@ -1250,7 +1290,7 @@ class sub_rec_price(object):
             .drop_duplicates([bid], keep='last')
         self.sqft_per_desk = 20
 
-    def get_reason(self, sspd, reason_col='compstak',jsFLG=False,jsKey='A'):
+    def get_reason(self, sspd, reason_col='compstak',filter_col=None,jsFLG=False,jsKey='A'):
         bid = self.bid
         cid = self.cid
         sfx = ['', '_right']
@@ -1264,13 +1304,26 @@ class sub_rec_price(object):
             clpair[reason_col] = clpair.apply(
                 lambda x: self.reason if float(x[cpstk_price]) * self.sqft_per_desk >= float(x[inv_price]) else ''
                 , axis=1)
+            if filter_col:
+                clpair[filter_col] = clpair.apply(
+                    lambda x: True if float(x[cpstk_price]) * self.sqft_per_desk >= float(x[inv_price]) else False
+                    , axis=1
+                )
             if jsFLG:
                 clpair[reason_col] = clpair[reason_col].apply(
                     lambda x: {jsKey:[x]}
                 )
         else:
-            clpair[reason_col] = ''
-        return clpair[[cid, bid, reason_col]]
+            # clpair[reason_col] = ''
+            if filter_col:
+                clpair = pd.DataFrame(columns=[cid,bid,reason_col,filter_col])
+            else:
+                clpair = pd.DataFrame(columns=[cid, bid, reason_col])
+
+        if filter_col:
+            return clpair[[cid, bid, reason_col,filter_col]]
+        else:
+            return clpair[[cid, bid, reason_col]]
 
 class sub_rec_compstak(object):
     def __init__(self, cpstkdb, cpstkdnb,
@@ -1308,7 +1361,7 @@ class sub_rec_compstak(object):
             .drop_duplicates([cid], keep='first')
 
         self.db[reason_col] = self.db['month_remain'].apply(
-            lambda x: self.reason % int(x) if x > 0 else ''
+            lambda x: self.reason % int(x)
         )
 
         if jsFLG:

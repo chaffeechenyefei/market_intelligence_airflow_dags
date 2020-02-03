@@ -132,8 +132,18 @@ def prod_all_reason_in_one_func(ind_city, **context):
                 lambda x: merge_str_2_json_rowise_reformat(row=x, src_cols=sorted_reason_col_name, jsKey='reasons',
                                                            target_phss=['Location similar in: ', 'Implicit reason: ']),
                 axis=1)
+
+        filter_cols = [c for c in hdargs["filter_col_name"].keys if c in sample_sspd.columns ]
+        if len(filter_cols) > 0:
+            sample_sspd['filter'] = sample_sspd.apply(
+                lambda x: merge_str_2_json_for_filter( row=x, src_cols= filter_cols, jsKey='filters'),
+                axis =1
+            )
+        else:
+            sample_sspd['filter'] = ''
     else:
         sample_sspd['reason'] = ''
+        sample_sspd['filter'] = ''
 
     sample_sspd[cid] = sample_sspd[cid].astype(int)
     sample_sspd = sample_sspd.rename(columns={
@@ -142,7 +152,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
     sample_sspd['building_id'] = sample_sspd['atlas_location_uuid'].apply(lambda x: hash(x))
     sample_sspd['algorithm'] = 'model_wide_and_deep'
 
-    col_list = [cid, 'building_id', 'similarity', 'note', 'atlas_location_uuid', 'algorithm']
+    col_list = [cid, 'building_id', 'similarity', 'note', 'atlas_location_uuid', 'algorithm','filter']#+filter
     sample_sspd = sample_sspd[col_list]
     sample_sspd['similarity'] = sample_sspd['similarity'].round(4)
 
@@ -172,10 +182,10 @@ def data_merge_for_all_cities():
     pd_id = pd.DataFrame(np.array(k), columns=['building_id'])
     loc_df = pd.concat([loc_df, pd_id], axis=1)
 
-    dfs = dfs[[cid, 'similarity', 'note', 'algorithm', 'atlas_location_uuid']].merge(loc_df, on=bid, how='left',
-                                                                                     suffixes=['', '_right'])
+    dfs_list = [cid, 'similarity', 'note', 'algorithm', 'atlas_location_uuid','filter']
+    dfs = dfs[dfs_list].merge(loc_df, on=bid, how='left', suffixes=['', '_right'])
 
-    col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid]
+    col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid, 'filter']
     dfs = dfs[col_list]
 
     if TEST_FLG:#result/sub_all_similarity_multi[_test][_200106.csv]
@@ -209,7 +219,7 @@ def data_merge_for_all_cities():
 
     dfs = dfs[
         ['sfdc_account_id', 'account_name', 'building_id', bid, 'similarity', 'note', 'algorithm', cid, 'company_name',
-         'city', 'zip_code', 'state', 'longitude', 'latitude','selected']]
+         'city', 'zip_code', 'state', 'longitude', 'latitude','selected','filter']]
 
     today = datetime.date.today()
     dfs.to_csv(pj(datapath,'result/recommendation_reason_%s.csv'%str(today)),index=False)
@@ -433,6 +443,8 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
     sspd = kwargs['sspd']
     comp_feat =kwargs['comp_feat']
     jsKey = 'Demand Signals'
+    filter_col = 'filter_size_dnb'
+    filter_col = filter_col if filter_col in hdargs["filter_col_name"].keys() else None
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -443,7 +455,8 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
                                         reason='Inventory reason: The max reservable desks( %d ) of this location can hold your company according to DnB.',
                                         bid=bid, cid=cid)
     sub_inventory_db = recall_com.get_reason(sspd=sspd, comp_feat=comp_feat, comp_col='emp_here',
-                                              inv_col='max_reservable_capacity', reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
+                                              inv_col='max_reservable_capacity', reason_col=sub_reason_col_name,
+                                             filter_col=filter_col, jsFLG=False,jsKey=jsKey)
     print('==> Coverage: %1.2f' % (len(sub_inventory_db) / total_pairs_num))
     if len(sub_inventory_db):
         sub_inventory_db.to_csv(sub_reason_file)
@@ -787,6 +800,8 @@ def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
     compstak_dnb_city = kwargs['compstak_dnb_city']
     jsFLG = False
     jsKey = 'Portfolio signal'
+    filter_col = 'filter_price'
+    filter_col =  filter_col if filter_col in hdargs["filter_col_name"].keys() else None
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
@@ -796,7 +811,7 @@ def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
     recall_com = sub_rec_price(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,invdb=invdb,
                                    reason='The price of wework location is cheaper than your current location.',
                                    cid=cid, bid=bid)
-    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name, jsFLG=jsFLG,jsKey=jsKey)
+    sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name, filter_col=filter_col,jsFLG=jsFLG,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_compstak_db) / total_pairs_num))
     if len(sub_compstak_db) >0:
@@ -835,6 +850,8 @@ def reason_demand_x_inventory(sub_reason_col_name, sub_reason_file_name, **kwarg
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
     jsKey = 'Demand Signals'
     jsFLG = False
+    filter_col = 'filter_size_demand'
+    filter_col = filter_col if filter_col in hdargs["filter_col_name"].keys() else None
 
     recall_com = sub_rec_demand_x_inventory(root_path=datapath,invdbname=inventory_file,
                                             sfxdnbname=salesforce_dnb_match_file,demdbname=demand_file,

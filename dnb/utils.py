@@ -587,7 +587,7 @@ def merge_str_2_json_for_filter(row, src_cols: list, jsKey='filters',default=Tru
         if ft=='True':
             nfilters[ftKey] = 1
         elif ft == 'False':
-            nfilters[ftKey] = 1
+            nfilters[ftKey] = 0
         else:
             nfilters[ftKey] = default_val
     jsFt[jsKey] = nfilters

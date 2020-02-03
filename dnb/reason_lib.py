@@ -136,7 +136,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
         filter_cols = [c for c in hdargs["filter_col_name"].keys() if c in sample_sspd.columns ]
         if len(filter_cols) > 0:
             sample_sspd['filter'] = sample_sspd.apply(
-                lambda x: merge_str_2_json_for_filter( row=x, src_cols= filter_cols, jsKey='filters'),
+                lambda x: merge_str_2_json_for_filter( row=x, src_cols= filter_cols, jsKey='filters',default=True),
                 axis =1
             )
         else:

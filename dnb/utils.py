@@ -568,21 +568,28 @@ def merge_str_2_json_rowise_reformat_v2(row, src_cols: list, jsKey='reasons', ta
     return json.dumps(jsRs)
 
 
-def merge_str_2_json_for_filter(row, src_cols: list, jsKey='filters'):
+def merge_str_2_json_for_filter(row, src_cols: list, jsKey='filters',default=True):
     """
     row in dataframe
     output json style string
     """
     jsFt = {}
     nfilters = {}
+    default_val = 1
+    if default:
+        default_val = 1
+    else:
+        default_val = 0
 
     for src_col in src_cols:
-        ft = bool(row[src_col])
+        ft = str(row[src_col])
         ftKey = src_col
-        if ft:
+        if ft=='True':
+            nfilters[ftKey] = 1
+        elif ft == 'False':
             nfilters[ftKey] = 1
         else:
-            nfilters[ftKey] = 0
+            nfilters[ftKey] = default_val
     jsFt[jsKey] = nfilters
     return json.dumps(jsFt)
 

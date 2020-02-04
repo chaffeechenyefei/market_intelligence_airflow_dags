@@ -49,9 +49,9 @@ hdargs = {
     "jsonFLG":1,
     "reason_col_name":{
         "reason_similar_biz":
-            {"p":4,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
+            {"p":4,"useFLG":1,"cache":1,"rsKey":"Additional Reasons"},
         "reason_location_based":
-            {"p":8,"useFLG":0,"cache":1, "rsKey":"Additional Reasons"},
+            {"p":8,"useFLG":1,"cache":1, "rsKey":"Additional Reasons"},
         "reason_model_based":
             {"p":10,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_similar_location":
@@ -59,7 +59,7 @@ hdargs = {
         "reason_similar_company":
             {"p":6,"useFLG":0,"cache":1,"rsKey":"Additional Reasons"},
         "reason_close_2_current_location":
-            {"p":5,"useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
+            {"p":5,"useFLG":1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_inventory_bom":
             {"p": 3, "useFLG": 1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_compstak":

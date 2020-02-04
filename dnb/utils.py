@@ -1134,7 +1134,7 @@ class sub_rec_location_distance(object):
             loc_comp_loc = pd.DataFrame(columns=[cid,bid,'geo_dist'])
         loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
         # loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + str(round(dist_thresh / 1e3, 1)) + 'km). '
-        loc_comp_loc[self.reason_col_name] = 'Recommended location is close to current location(<' + round(
+        loc_comp_loc[self.reason_col_name] = '[Location] Recommended location is close to current location(<' + round(
             loc_comp_loc['geo_dist'].astype(float) / 1e3, 1).astype(str) + 'km). '
         if jsFLG:
             loc_comp_loc[self.reason_col_name] = loc_comp_loc[self.reason_col_name].apply(
@@ -1167,10 +1167,10 @@ class sub_rec_inventory_bom(object):
         clpair = clpair.fillna(0)
         if len(clpair) > 0:
             clpair[reason_col] = clpair.apply(
-                lambda x: (self.reason % int(x[inv_col])) if int(x[comp_col]) <= int(x[inv_col]) else '', axis=1)
+                lambda x: (self.reason % int(x[inv_col])) if int(x[comp_col]) <= int(x[inv_col]) and int(x[inv_col]) > 0 else '', axis=1)
             if filter_col:
                 clpair[filter_col] = clpair.apply(
-                lambda x: True if int(x[comp_col]) <= int(x[inv_col]) else False, axis=1
+                lambda x: True if int(x[comp_col]) <= int(x[inv_col]) and int(x[inv_col]) > 0 else False, axis=1
                 )
             if jsFLG:
                 clpair[reason_col] = clpair[reason_col].apply(
@@ -1225,6 +1225,8 @@ class sub_rec_demand_x_inventory(object):
             else:
                 clpair = pd.DataFrame(columns=[cid, bid, reason_col])
         else:
+            clpair = clpair.loc[clpair['req_desk'] > 0]
+            clpair = clpair.loc[clpair['cap'] > 0]
             clpair[reason_col] = clpair.apply(
                     lambda x: self.reason % (int(x['req_desk']), int(x['cap'])) if int(x['req_desk']) <= int(
                         x['cap']) else '', axis=1)
@@ -1361,11 +1363,12 @@ class sub_rec_compstak(object):
         )
 
         self.db['month_remain'] = self.db['month_remain'].astype(int)
+        self.db = self.db.loc[self.db['month_remain']>0]
         self.db = self.db.loc[self.db['month_remain'] <= thresh]
 
-        self.db['month_remain'] = self.db['month_remain'].apply(
-            lambda x: x if int(x) > 0 else 1
-        )
+        # self.db['month_remain'] = self.db['month_remain'].apply(
+        #     lambda x: x if int(x) > 0 else 1
+        # )
 
         self.db = self.db.sort_values([cid, 'month_remain']) \
             .drop_duplicates([cid], keep='first')

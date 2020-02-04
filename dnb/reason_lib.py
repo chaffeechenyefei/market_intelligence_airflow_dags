@@ -440,7 +440,9 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
     print('Inventory bom')
     sspd = kwargs['sspd']
     comp_feat =kwargs['comp_feat']
-    jsKey = 'Demand Signals'
+    jsKey = 'Portfolio signal'
+    rsKey = hdargs["reason_col_name"][sys._getframe().f_code.co_name]["rsKey"]
+    assert(rsKey == jsKey )
     filter_col = 'filter_size_dnb'
     filter_col = filter_col if filter_col in hdargs["filter_col_name"].keys() else None
 
@@ -450,7 +452,7 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, **kwargs):
     invdb = pd.read_csv(pjoin(datapath, inventory_file))
 
     recall_com = sub_rec_inventory_bom(invdb=invdb,
-                                        reason='Inventory reason: The max reservable desks( %d ) of this location can hold your company according to DnB.',
+                                        reason='[Size] The max reservable desks( %d ) of this location can hold your company according to DnB.',
                                         bid=bid, cid=cid)
     sub_inventory_db = recall_com.get_reason(sspd=sspd, comp_feat=comp_feat, comp_col='emp_here',
                                               inv_col='max_reservable_capacity', reason_col=sub_reason_col_name,
@@ -525,12 +527,14 @@ def reason_compstak(sub_reason_col_name, sub_reason_file_name, **kwargs):
     compstak_db_city = kwargs['compstak_db_city']
     compstak_dnb_city = kwargs['compstak_dnb_city']
     jsKey = 'Portfolio signal'
+    rsKey = hdargs["reason_col_name"][sys._getframe().f_code.co_name]["rsKey"]
+    assert(jsKey == rsKey)
 
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
     recall_com = sub_rec_compstak(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,
-                                   reason='Compstak reason: One of company\'s leases will expire in %d months.',
+                                   reason='[Timing] One of company\'s leases will expire in %d months.',
                                    cid=cid, bid=bid)
     sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
 
@@ -800,7 +804,7 @@ def reason_price_based(sub_reason_col_name, sub_reason_file_name, **kwargs):
     invdb = pd.read_csv(pjoin(datapath, inventory_file))
 
     recall_com = sub_rec_price(cpstkdb=compstak_db_city, cpstkdnb=compstak_dnb_city,invdb=invdb,
-                                   reason='The price of wework location is cheaper than your current location.',
+                                   reason='[Price] The price of wework location is cheaper than your current location.',
                                    cid=cid, bid=bid)
     sub_compstak_db = recall_com.get_reason(sspd=sspd, reason_col=sub_reason_col_name, filter_col=filter_col,jsFLG=jsFLG,jsKey=jsKey)
 
@@ -845,7 +849,7 @@ def reason_demand_x_inventory(sub_reason_col_name, sub_reason_file_name, **kwarg
 
     recall_com = sub_rec_demand_x_inventory(root_path=datapath,invdbname=inventory_file,
                                             sfxdnbname=salesforce_dnb_match_file,demdbname=demand_file,
-                                            reason='The location available space(%d) can meet your requirement(%d).')
+                                            reason='[Size] The location available space(%d) can meet your requirement(%d).')
     sub_pair = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,filter_col=filter_col,jsFLG=jsFLG,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_pair) / total_pairs_num))

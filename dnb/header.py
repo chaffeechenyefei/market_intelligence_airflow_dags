@@ -61,7 +61,7 @@ hdargs = {
         "reason_close_2_current_location":
             {"p":5,"useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
         "reason_inventory_bom":
-            {"p": 3, "useFLG": 1,"cache":1,"rsKey":"Demand Signals"},
+            {"p": 3, "useFLG": 1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_compstak":
             {"p": 1, "useFLG": 1,"cache":1,"rsKey":"Portfolio signal"},
         "reason_talent_score":

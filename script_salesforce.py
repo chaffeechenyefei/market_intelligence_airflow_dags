@@ -48,6 +48,7 @@ if __name__ == '__main__':
     sfdnb = load_salesforce_dnb_match(db='',table=dnb_acc)
 
     dedup_sfdnb = sfdnb.drop_duplicates([fid,cid,city], keep='first').reset_index()[[fid,fname,cid,city]]
+    # assert(len(dedup_sfdnb.loc[dedup_sfdnb[cid]==74157331]) > 0)
     dedup_sfdnb = dedup_sfdnb.rename(columns={fname:fname_formal})
 
     print('Duplicate Shrinkage: %1.2f'% (len(dedup_sfdnb)/len(sfdnb)))

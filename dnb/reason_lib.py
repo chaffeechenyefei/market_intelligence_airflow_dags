@@ -1,6 +1,7 @@
 from dnb.header import *
 from dnb.utils import *
 import dnb.data_loader as data_loader
+import sys
 
 sfx = ['','_right']
 

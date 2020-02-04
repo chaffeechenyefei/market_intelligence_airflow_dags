@@ -32,7 +32,7 @@ dag = DAG(
 )
 
 program_exe = hdargs["dnb_data_normalizaiton_with_param_exe"]
-program_path = hdargs["dnb_dnn_program_path"]
+program_path = hdargs["dnb_dnn_normalization_path"]
 
 run_root = hdargs["dnb_dnn_cmd"]["run_root"]
 ls_card = hdargs["ls_card"]

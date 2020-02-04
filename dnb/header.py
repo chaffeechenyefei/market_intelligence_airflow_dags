@@ -97,6 +97,7 @@ hdargs = {
     "use_additional_feat":1,
 
     "dnb_dnn_program_path":"/home/ubuntu/mygit/locationIntelligenceModel/",
+    "dnb_dnn_normalization_path":"/home/ubuntu/mygit/locationIntelligencePipeline/",
     "dnb_dnn_prediction_exe":"main_location_intelligence_region.py",
     "dnb_dnn_cmd":{
         "run_root":"result/location_RSRBv5dev_191213",

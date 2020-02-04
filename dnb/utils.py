@@ -743,8 +743,8 @@ class feature_translate(object):
         featsrc.region, 'Age distribution of the population meets the need of your company')
         self.col2phs['income_per_capita'] = (featsrc.region, 'Income level is adequate to your company')
         self.col2phs['pct_masters_degree'] = (featsrc.region, 'Education degree meets the need of your company')
-        self.col2phs['walk_score'] = (featsrc.region, 'It is walking friendly')
-        self.col2phs['bike_score'] = (featsrc.region, 'It is biking friendly')
+        self.col2phs['walk_score'] = (featsrc.region, '[Accessibility] It is walking friendly')
+        self.col2phs['bike_score'] = (featsrc.region, '[Accessibility] It is biking friendly')
 
     def getItem(self, gvkey):
         # precision matching

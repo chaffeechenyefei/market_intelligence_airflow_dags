@@ -364,7 +364,7 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name ,**kwargs):
                                           bid=bid, cid=cid, cname='business_name')
 
     sub_pairs = recall_com.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
-                                                                    reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.',
+                                                                    reason='[Similar Industry] This location has a tenant company(%s) around which is in the same industry(%s) as your company.',
                                                                    jsFLG=False,jsKey=jsKey)
     # explanar
     print('==> Coverage: %1.2f' % (len(sub_pairs) / total_pairs_num))
@@ -495,7 +495,7 @@ def reason_talent_score(sub_reason_col_name, sub_reason_file_name, **kwargs):
     talentdb = dataloadCls.load_talent()
     lscard = dataloadCls.load_location_scorecard_msa()
 
-    recall_com = sub_rec_talent(talentdb=talentdb,lsdb=lscard,reason='Talent score here is %s.')
+    recall_com = sub_rec_talent(talentdb=talentdb,lsdb=lscard,reason='[Talent] Talent score here is %s.')
     sub_talent_db = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,jsFLG=False,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_talent_db) / total_pairs_num))
@@ -587,7 +587,7 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, **kwargs):
                                               matching_col=matching_col, reason_col_name=sub_reason_col_name,
                                               bid=bid, cid=cid, cname='business_name')
     sub_sspd = recall_com5_ext.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
-                                                                       reason='This location has a tenant company(%s) around which is in the same industry(%s) as your company.')
+                                                                       reason='[Similar Company] This location has a tenant company(%s) around which is in the same industry(%s) as your company.')
     # explanar
     sub_sspd = sspd.merge(sub_sspd[[cid, bid]], on=[cid, bid], suffixes=sfx)
     print('Shrinkage ratio: %1.2f' % (len(sub_sspd) / len(sspd)))
@@ -705,7 +705,7 @@ def reason_location_based(sub_reason_col_name, sub_reason_file_name , **kwargs):
     # explanar:merge_rec_reason_rowise 需要在结尾加"."
     sub_loc_recall = merge_rec_reason_rowise(sub_loc_recall, group_cols=[bid],
                                              merge_col=sub_reason_col_name, sep='. ')
-    sub_loc_recall[sub_reason_col_name] = 'This building is at a location with great amenities: ' + sub_loc_recall[
+    sub_loc_recall[sub_reason_col_name] = '[Amenity] This building is at a location with great amenities: ' + sub_loc_recall[
         sub_reason_col_name] + '. '
     if jsFLG:
         sub_loc_recall[sub_reason_col_name] = sub_loc_recall[sub_reason_col_name].apply(

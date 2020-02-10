@@ -22,7 +22,8 @@ class data_process(object):
         }
         self.opp_col = {
             'bid': 'atlas_location_uuid',
-            'cid': 'AccountId',
+            'ori_cid': 'AccountId',
+            'cid':'account_id',
             'date_col': 'date',
             'status_col': 'status',
             'n_status_col': 'n_status',  # 'Open/Close'
@@ -101,6 +102,7 @@ class data_process(object):
     def load_opportunity(self, db='salesforce', dbname='opportunities.csv', save_dbname='salesforce_pair.csv'):
         db_path = pj(self.root_path, db)
         cid = self.opp_col['cid']
+        ori_cid = self.opp_col['ori_cid']
         bid = self.opp_col['bid']
         date_col = self.opp_col['date_col']
         status_col = self.opp_col['status_col']
@@ -108,13 +110,14 @@ class data_process(object):
         kset = set(['closed', 'close', 'closing'])
 
         op_dat = pd.read_csv(pj(db_path, dbname), header=None,
-                             names=['Id', cid, bid, status_col, date_col, 'n2', 'n3', 'n4'])
+                             names=['Id', ori_cid, bid, status_col, date_col, 'n2', 'n3', 'n4'])
         op_dat[[date_col]] = op_dat[[date_col]].fillna('1990-01-01')
-        op_dat = op_dat.sort_values([cid, bid, date_col]).drop_duplicates([cid, bid], keep='last')
+        op_dat = op_dat.sort_values([ori_cid, bid, date_col]).drop_duplicates([ori_cid, bid], keep='last')
         op_dat[[status_col]] = op_dat[[status_col]].fillna('Closed')
         op_dat[n_status_col] = op_dat[status_col].apply(
             lambda x: 'Closed' if kset & set(x.lower().split(' ')) else 'Open')
-        self.op_dat = op_dat
+        self.op_dat = op_dat.rename(columns={ori_cid: cid})
+        #         print(self.op_dat.columns)
         if not self.sil:
             print('%d latest opp loaded' % len(op_dat))
         self.op_dat.to_csv(pj(db_path, save_dbname))

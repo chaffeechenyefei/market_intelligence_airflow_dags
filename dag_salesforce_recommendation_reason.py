@@ -12,6 +12,8 @@ from airflow.operators.dummy_operator import DummyOperator
 import os,sys
 sys.path.insert(0,os.path.abspath(os.path.dirname(__file__)))
 
+import salesforce.reason_lib as rslib
+
 
 
 args = {
@@ -35,14 +37,14 @@ dag = DAG(
 task_get_pair = 'task_get_pair'
 op_get_pair = PythonOperator(
     task_id=task_get_pair,
-    python_callable=,
+    python_callable=rslib.generate_pairs,
     dag=dag,
 )
 
 task_get_reason = 'task_get_reason'
 op_get_reason = PythonOperator(
     task_id = task_get_reason,
-    python_callable=,
+    python_callable=rslib.prod_all_reason_in_one_func,
     dag = dag,
 )
 

@@ -8,13 +8,14 @@ inventory_file = 'inventory_bom.csv'
 compstak_file = 'tetris_mv_tetris_transactions_2016_current.csv'
 demand_file = 'demand_signals_191110.csv'
 salesforce_file = 'salesforce/opportunities.csv'
-salesforce_pos_file = 'salesforce/salesforce_pair.csv'
-salesforce_opp_x_atlas_file = 'salesforce/salesforce_opp_x_atlas.csv'
+
 
 reason_support_hot_location = 'salesforce/reason/hot_locations_0121.csv'
 reason_support_item2item = 'salesforce/reason/item2item.csv'
 
-mid_salesforce_similairty_file = 'salesforce_pair.csv'
+mid_salesforce_similairty_file = 'salesforce_opp_x_atlas.csv'
+mid_salesforce_pos_file = 'salesforce_pair.csv'
+mid_salesforce_opp_x_atlas_file = 'salesforce_opp_x_atlas.csv'
 
 # compstak_dnb_match_file = 'relation_dnb_compstak_0120.csv'
 # salesforce_dnb_file = 'salesforce_comp_city_from_opp.csv'

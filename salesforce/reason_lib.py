@@ -1,4 +1,5 @@
 from salesforce.header import *
+from salesforce.utils import salesforce_pair
 from dnb.data_loader import data_process
 import pandas as pd
 import json
@@ -12,6 +13,18 @@ def set_xcom_var(ti, key, value):
 
 def get_xcom_var(ti, task_id, key):
     return ti.xcom_pull(task_ids=task_id, key=key)
+
+
+def generate_pairs():
+    print('##generating pairs for prediction')
+    opp_file = salesforce_file
+    lscard_file = hdargs["ls_card"]
+    save_pos_pair_name = pj(datapath_mid,mid_salesforce_pos_file)
+    save_opp_x_atlas_name = pj(datapath_mid,mid_salesforce_opp_x_atlas_file)
+
+    prgt = salesforce_pair(datapath=datapath,opp_file=opp_file,lscard_file=lscard_file)
+    prgt.generate(save_pos_pair_name=save_pos_pair_name,save_opp_x_atlas_name=save_opp_x_atlas_name)
+    print('##Done')
 
 
 def merge_col_into_json(row,src_cols=[],jsKey='reasons'):
@@ -36,9 +49,6 @@ def merge_col_into_json(row,src_cols=[],jsKey='reasons'):
     else:
         return ''
 
-
-
-
 def prod_all_reason_in_one_func():
     similairty_file = pj(datapath_mid,mid_salesforce_similairty_file)
     if os.path.isfile(similairty_file):
@@ -59,8 +69,8 @@ def prod_all_reason_in_one_func():
         compstak_file = compstak_file,
         demand_file = demand_file,
         salesforce_file = salesforce_file,
-        salesforce_pos_file = salesforce_pos_file,
-        salesforce_opp_x_atlas_file = salesforce_opp_x_atlas_file,
+        salesforce_pos_file = pj(datapath_mid,mid_salesforce_pos_file),
+        salesforce_opp_x_atlas_file = pj(datapath_mid,mid_salesforce_opp_x_atlas_file),
         location_scorecard_file = hdargs["ls_card"],
         fid = fid,
         bid = bid,
@@ -69,7 +79,7 @@ def prod_all_reason_in_one_func():
     print('##updating reason file for each reason')
     reason_file_name_lst = {}
     for reason_col_name,reason_param in hdargs["reason_col_name"].items():
-        reason_file_name = pj(datapath_mid, reason_col_name + '.csv')
+        reason_file_name = pj(datapath_mid, reason_col_name + '.csv')#names of file to be saved for each reason
         reason_file_name_lst[reason_col_name] = reason_file_name
         jsKey = reason_param["rsKey"]
         cacheFLG = reason_param["cache"]

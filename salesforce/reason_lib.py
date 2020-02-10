@@ -4,6 +4,7 @@ from dnb.data_loader import data_process
 import pandas as pd
 import json
 import sys
+import datetime
 
 sfx = ['','_right']
 
@@ -97,7 +98,7 @@ def prod_all_reason_in_one_func():
     for reason_col_name,reason_param in hdargs["reason_col_name"].items():
         cacheFLG = reason_param["cache"]
         reason_file_name = reason_file_name_lst[reason_col_name]
-        if os.path.isfile(reason_col_name) and cacheFLG:
+        if os.path.isfile(reason_file_name) and cacheFLG:
             reason_dat = pd.read_csv(reason_file_name,index_col=0)
             if reason_dat.empty:
                 print('==> reason: %s skipped because file: %s is empty'% (reason_col_name,reason_file_name))
@@ -108,11 +109,24 @@ def prod_all_reason_in_one_func():
         else:
             print('==> skipped because no file: %s is found or not cached'%reason_file_name)
 
+    print('##json formatting')
     sspd = sspd.fillna('')#importance for .apply
     sspd['reason'] = sspd.apply(
         lambda x: merge_col_into_json(x,reason_exist,jsKey='reasons'),
         axis=1
     )
+
+    align_col = list( set([fid,bid,'similarity','reason']) & set(sspd.columns) )
+    print('==> Align columns:')
+    print(align_col)
+
+    sspd = sspd[align_col]
+
+    print('##saving')
+    today = datetime.date.today()
+    result_file = pj(datapath,hdargs["final_file_name"]%str(today))
+    sspd.to_csv(result_file)
+    print('##Done %d saved'%len(sspd))
 
 
 """

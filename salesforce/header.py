@@ -46,7 +46,7 @@ hdargs = {
     "test_db":"salesforce_tmp_table",
     "dev_db":"salesforce_reason_table",
     "test":0, #whether using test_db(space/folder) or dev_db
-    "final_file_name":"result/salesforce_recommendation_reason",
+    "final_file_name":"result/salesforce_recommendation_reason_%s.csv",
 }
 
 

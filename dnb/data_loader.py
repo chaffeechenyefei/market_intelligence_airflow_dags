@@ -172,13 +172,16 @@ class data_process(object):
             de_demand_dat.to_csv(pj(db_path, save_dbname))
         return de_demand_dat
 
-    def load_location_scorecard_msa(self, db='', dbname='location_scorecard_200106.csv'):
+    def load_location_scorecard_msa(self, db='', dbname='location_scorecard_200106.csv',is_wework=False):
         db_path = pj(self.root_path, db)
         bid = self.ls_col['bid']
         state_col = self.ls_col['state']
         city_col = self.ls_col['city']
+        wework_col = 'is_wework'
 
-        lsdat = pd.read_csv(pj(db_path, dbname), index_col=0)[[bid, state_col, city_col]]
+        lsdat = pd.read_csv(pj(db_path, dbname), index_col=0)[[bid, state_col, city_col,wework_col]]
+        if is_wework:
+            lsdat = lsdat.loc[lsdat[wework_col]==True]
         if not self.sil:
             print('%d location scorecard for msa loaded' % len(lsdat))
         return lsdat

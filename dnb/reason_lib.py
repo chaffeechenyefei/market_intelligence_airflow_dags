@@ -224,7 +224,7 @@ def data_merge_for_all_cities():
 
     today = datetime.date.today()
     dfs.to_csv(pj(datapath,'result/recommendation_reason_%s.csv'%str(today)),index=False)
-    print('Done!')
+    print('Done! %d saved'%len(dfs))
 
 
 def data_merge_for_city(city_reason_file_name,sub_reason_file_names,reason_names, var_task_space,**context):

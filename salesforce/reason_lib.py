@@ -86,7 +86,7 @@ def prod_all_reason_in_one_func():
         useFLG = reason_param["useFLG"]
         if useFLG:
             print('##updating reason:%s'%reason_col_name)
-            exe_func = locals()[reason_col_name]
+            exe_func = globals()[reason_col_name]
             reason_dat = exe_func(sspd= sspd, jsKey=jsKey,**kwargs)
             reason_dat.to_csv(reason_col_name)
         else:

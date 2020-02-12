@@ -13,7 +13,7 @@ salesforce_file = 'salesforce/opportunities.csv'
 reason_support_hot_location = 'salesforce/reason/hot_locations_0121.csv'
 reason_support_item2item = 'salesforce/reason/item2item.csv'
 
-mid_salesforce_similairty_file = 'salesforce_opp_x_atlas.csv'
+mid_salesforce_similairty_file = 'salesforce_opp_x_atlas_predictions.csv'
 mid_salesforce_pos_file = 'salesforce_pair.csv'
 mid_salesforce_opp_x_atlas_file = 'salesforce_opp_x_atlas.csv'
 
@@ -38,6 +38,8 @@ hdargs = {
             {"p":1,"useFLG":1,"cache":1,"rsKey":rsKey.Additional.value},
         "reason_salesforce_demand_x_inventory":
             {"p":2,"useFLG":1,"cache":1,"rsKey":rsKey.Demand.value},
+        "reason_salesforce_x_inventory":
+            {"p": 3, "useFLG": 1, "cache": 1, "rsKey": rsKey.Demand.value},
     },
 
     "bid":"atlas_location_uuid",

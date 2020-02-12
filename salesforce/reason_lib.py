@@ -54,6 +54,10 @@ def prod_all_reason_in_one_func():
     similairty_file = pj(datapath_mid,mid_salesforce_similairty_file)
     if os.path.isfile(similairty_file):
         sspd = pd.read_csv(similairty_file,index_col=0)
+        sspd = sspd.rename(
+            columns={'location_id':hdargs["bid"],
+                     'prob':'similarity'}
+        )
         print('##Reading similarity file: %d loaded'%len(sspd))
     else:
         print('##No similarity file is found. Error.')
@@ -94,6 +98,7 @@ def prod_all_reason_in_one_func():
             print('##skipped updating reason:%s because useFLG'%reason_col_name)
 
     print('##merging them into one data')
+    sspd = sspd[[fid,bid,'similarity']]
     reason_exist = []
     for reason_col_name,reason_param in hdargs["reason_col_name"].items():
         cacheFLG = reason_param["cache"]
@@ -224,7 +229,7 @@ def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signa
     else:
         clpair = clpair.loc[clpair['req_desk'].astype(int) <= clpair['cap'].astype(int)]
         print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
-        reason_desc = '[Size] The location available space(%d) can meet your requirement(%d).'
+        reason_desc = '[Size] The location available space(%d) can meet your requirement(%d) according to demand signal.'
         clpair[reason_col_name] = clpair.apply(
             lambda x: reason_desc % (int(x['req_desk']), int(x['cap'])), axis=1)
         clpair[reason_col_name] = clpair[reason_col_name].apply(
@@ -232,3 +237,37 @@ def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signa
         )
 
     return clpair[[fid, bid, reason_col_name]]
+
+def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
+    reason_col_name = sys._getframe().f_code.co_name
+    print('==>%s' % reason_col_name)
+    bid = kwargs['bid']
+    fid = kwargs['fid']
+
+    inv_file = kwargs['inventory_file']
+    dtloader = data_process(datapath)
+    inv_dat = dtloader.load_inventory(db='', dbname=inv_file)
+    inv_col = dtloader.inv_col
+    assert (bid == inv_col['bid'])
+    inv_dat = inv_dat[[bid, inv_col['cap']]].rename(columns={inv_col['cap']: 'cap'})
+    print('%d inventory loaded' % len(inv_dat))
+
+    interest_desk = 'Interested_in_Number_of_Desks__c'
+    clpair_interest = sspd[[fid, bid, interest_desk]]
+    clpair_interest = clpair_interest.fillna(0)
+    clpair_interest = clpair_interest.merge(inv_dat, on=bid, suffixes=sfx)[[fid, bid,interest_desk,'cap']]
+
+    clpair_interest = clpair_interest.loc[clpair_interest['cap']>0]
+
+    if clpair_interest.empty:
+        clpair_interest = pd.DataFrame(columns=[fid,bid,reason_col_name])
+    else:
+        clpair_interest = clpair_interest.loc[clpair_interest[interest_desk].astype(int) <= clpair_interest['cap'].astype(int)]
+        print('==> Coverage:%1.3f' % (len(clpair_interest) / len(sspd)))
+
+        reason_desc = '[Size] The location available space(%d) can meet your requirement(%d) according to salesforce.'
+        clpair_interest[reason_col_name] = clpair_interest.apply(
+            lambda x: reason_desc % (int(x[interest_desk]), int(x['cap'])), axis=1)
+        clpair_interest[reason_col_name] = clpair_interest[reason_col_name].apply(
+            lambda x: json.dumps({jsKey: [x]})
+        )

@@ -141,6 +141,7 @@ reason function
 def reason_salesforce_hot_location(sspd: pd.DataFrame, jsKey='Additional Reason',**kwargs):
     reason_col_name = sys._getframe().f_code.co_name
     print('==>%s' % reason_col_name)
+    total_len = len(sspd)
     datapath = kwargs['datapath']
     bid = kwargs['bid']
     fid = kwargs['fid']
@@ -149,7 +150,7 @@ def reason_salesforce_hot_location(sspd: pd.DataFrame, jsKey='Additional Reason'
     rsdb = pd.read_csv(reason_file, index_col=0)[[bid]]
     print('%d hot locations loaded from %s' % (len(rsdb),reason_file))
     clpair = sspd.merge(rsdb, on=bid)
-    print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
+    print('==> Coverage:%1.3f' % (len(clpair) / total_len))
     if clpair.empty:
         clpair = pd.DataFrame(columns=[fid, bid,reason_col_name])
     else:
@@ -161,6 +162,7 @@ def reason_salesforce_hot_location(sspd: pd.DataFrame, jsKey='Additional Reason'
 def reason_salesforce_similar_location(sspd: pd.DataFrame, jsKey='Addition Reason',**kwargs):
     reason_col_name = sys._getframe().f_code.co_name
     print('==>%s' % reason_col_name)
+    total_len = len(sspd)
     datapath = kwargs['datapath']
     bid = kwargs['bid']
     fid = kwargs['fid']
@@ -182,7 +184,7 @@ def reason_salesforce_similar_location(sspd: pd.DataFrame, jsKey='Addition Reaso
     sspd = sspd.merge(i2idb, on=bid, suffixes=sfx)[[fid, bid, gid]]
 
     clpair = sspd.merge(hisdb, on=[fid, gid], suffixes=sfx)
-    print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
+    print('==> Coverage:%1.3f' % (len(clpair) / total_len))
 
     if clpair.empty:
         clpair = pd.DataFrame(columns=[fid, bid, reason_col_name])
@@ -196,6 +198,7 @@ def reason_salesforce_similar_location(sspd: pd.DataFrame, jsKey='Addition Reaso
 def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signals',**kwargs):
     reason_col_name = sys._getframe().f_code.co_name
     print('==>%s' % reason_col_name)
+    total_len = len(sspd)
     bid = kwargs['bid']
     fid = kwargs['fid']
     datapath = kwargs['datapath']
@@ -230,7 +233,7 @@ def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signa
         clpair = pd.DataFrame(columns=[fid, bid, reason_col_name])
     else:
         clpair = clpair.loc[clpair['req_desk'].astype(int) <= clpair['cap'].astype(int)]
-        print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
+        print('==> Coverage:%1.3f' % (len(clpair) / total_len))
         reason_desc = '[Size] The location available space(%d) can meet your requirement(%d) according to demand signal.'
         clpair[reason_col_name] = clpair.apply(
             lambda x: reason_desc % (int(x['cap']),int(x['req_desk'])), axis=1)
@@ -243,6 +246,7 @@ def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signa
 def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
     reason_col_name = sys._getframe().f_code.co_name
     print('==>%s' % reason_col_name)
+    total_len = len(sspd)
     bid = kwargs['bid']
     fid = kwargs['fid']
     datapath = kwargs['datapath']
@@ -266,7 +270,7 @@ def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
         clpair_interest = pd.DataFrame(columns=[fid,bid,reason_col_name])
     else:
         clpair_interest = clpair_interest.loc[clpair_interest[interest_desk].astype(int) <= clpair_interest['cap'].astype(int)]
-        print('==> Coverage:%1.3f' % (len(clpair_interest) / len(sspd)))
+        print('==> Coverage:%1.3f' % (len(clpair_interest) / total_len))
 
         reason_desc = '[Size] The location available space(%d) can meet your requirement(%d) according to salesforce.'
         clpair_interest[reason_col_name] = clpair_interest.apply(
@@ -279,6 +283,7 @@ def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
 def reason_salesforce_close_2_current_location(sspd: pd.DataFrame, jsKey='',**kwargs):
     reason_col_name = sys._getframe().f_code.co_name
     print('==>%s' % reason_col_name)
+    total_len = len(sspd)
     bid = kwargs['bid']
     fid = kwargs['fid']
     ls_file = kwargs['location_scorecard_file']
@@ -318,10 +323,10 @@ def reason_salesforce_close_2_current_location(sspd: pd.DataFrame, jsKey='',**kw
     if clpair.empty:
         clpair = pd.DataFrame(columns=[fid, bid, reason_col_name])
     else:
-        print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
+        print('==> Coverage:%1.3f' % (len(clpair) / total_len))
         reason_desc = '[Location] This location is close to its current location(<=%1.1f km) according to salesforce.'
         clpair[reason_col_name] = clpair[dist].apply(
-            lambda x: json.dumps({jsKey: [ (reason_desc%float(x)) ] })
+            lambda x: json.dumps({jsKey: [ (reason_desc% round(float(x)/1e3,1))]})
         )
 
     return clpair[[fid,bid,reason_col_name]]

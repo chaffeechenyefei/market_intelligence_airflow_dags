@@ -1228,7 +1228,7 @@ class sub_rec_demand_x_inventory(object):
             clpair = clpair.loc[clpair['req_desk'] > 0]
             clpair = clpair.loc[clpair['cap'] > 0]
             clpair[reason_col] = clpair.apply(
-                    lambda x: self.reason % (int(x['req_desk']), int(x['cap'])) if int(x['req_desk']) <= int(
+                    lambda x: self.reason % (int(x['cap']),int(x['req_desk'])) if int(x['req_desk']) <= int(
                         x['cap']) else '', axis=1)
             if filter_col:
                 clpair[filter_col] = clpair.apply(

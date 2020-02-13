@@ -69,7 +69,7 @@ hdargs = {
         "reason_price_based":
             {"p":2, "useFLG":0,"cache":1,"rsKey":"Portfolio signal"},
         "reason_demand_x_inventory":
-            {"p":0, "useFLG":0 , "cache":1,"rsKey":"Demand Signals"},
+            {"p":0, "useFLG":1 , "cache":1,"rsKey":"Demand Signals"},
     },
     "filter_col_name":{#'column name':'explanation'
         "filter_price":"The price per desk lower than current effective rent.",

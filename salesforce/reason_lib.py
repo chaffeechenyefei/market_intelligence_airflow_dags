@@ -231,7 +231,7 @@ def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signa
         print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
         reason_desc = '[Size] The location available space(%d) can meet your requirement(%d) according to demand signal.'
         clpair[reason_col_name] = clpair.apply(
-            lambda x: reason_desc % (int(x['req_desk']), int(x['cap'])), axis=1)
+            lambda x: reason_desc % (int(x['cap']),int(x['req_desk'])), axis=1)
         clpair[reason_col_name] = clpair[reason_col_name].apply(
             lambda x: json.dumps({jsKey: [x]})
         )
@@ -267,7 +267,7 @@ def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
 
         reason_desc = '[Size] The location available space(%d) can meet your requirement(%d) according to salesforce.'
         clpair_interest[reason_col_name] = clpair_interest.apply(
-            lambda x: reason_desc % (int(x[interest_desk]), int(x['cap'])), axis=1)
+            lambda x: reason_desc % (int(x['cap']),int(x[interest_desk])), axis=1)
         clpair_interest[reason_col_name] = clpair_interest[reason_col_name].apply(
             lambda x: json.dumps({jsKey: [x]})
         )

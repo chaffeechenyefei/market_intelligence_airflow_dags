@@ -271,3 +271,4 @@ def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
         clpair_interest[reason_col_name] = clpair_interest[reason_col_name].apply(
             lambda x: json.dumps({jsKey: [x]})
         )
+    return clpair_interest[[fid, bid, reason_col_name]]

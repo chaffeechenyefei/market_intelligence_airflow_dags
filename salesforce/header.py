@@ -39,7 +39,9 @@ hdargs = {
         "reason_salesforce_demand_x_inventory":
             {"p":2,"useFLG":1,"cache":1,"rsKey":rsKey.Demand.value},
         "reason_salesforce_x_inventory":
-            {"p": 3, "useFLG": 1, "cache": 1, "rsKey": rsKey.Demand.value},
+            {"p": 3, "useFLG": 1, "cache": 1, "rsKey": rsKey.Portfolio.value},
+        "reason_salesforce_close_2_current_location":
+            {"p": 4, "useFLG": 1, "cache": 1, "rsKey": rsKey.Portfolio.value},
     },
 
     "bid":"atlas_location_uuid",

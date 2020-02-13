@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from math import *
+import pygeohash as pgh
 
 from dnb.data_loader import data_process
 import os
@@ -50,8 +52,17 @@ class salesforce_pair(object):
 
 
 
+def geo_distance(lng1, lat1, lng2, lat2):
+    lng1, lat1, lng2, lat2 = map(radians, [lng1, lat1, lng2, lat2])
+    dlon = lng2 - lng1
+    dlat = lat2 - lat1
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    dis = 2 * asin(sqrt(a)) * 6371 * 1000
+    return dis
 
-
+def geohash(data, dst_col='geohash' ,precision=6):
+    data[dst_col] = data.apply(lambda row: pgh.encode(row['longitude'], row['latitude'], precision=precision), axis=1)
+    return data
 
 
 

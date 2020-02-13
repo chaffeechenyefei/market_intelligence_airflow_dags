@@ -1,5 +1,5 @@
 from salesforce.header import *
-from salesforce.utils import salesforce_pair
+from salesforce.utils import salesforce_pair,geo_distance,geohash
 from dnb.data_loader import data_process
 import pandas as pd
 import json
@@ -121,7 +121,8 @@ def prod_all_reason_in_one_func():
         axis=1
     )
 
-    align_col = list( set([fid,bid,'similarity','reason']) & set(sspd.columns) )
+    # align_col = list( set([fid,bid,'similarity','reason']) & set(sspd.columns) )
+    align_col = [fid,bid,'similarity','reason']
     print('==> Align columns:')
     print(align_col)
 
@@ -197,6 +198,7 @@ def reason_salesforce_demand_x_inventory(sspd: pd.DataFrame, jsKey='Demand Signa
     print('==>%s' % reason_col_name)
     bid = kwargs['bid']
     fid = kwargs['fid']
+    datapath = kwargs['datapath']
 
     inv_file = kwargs['inventory_file']
     dtloader = data_process(datapath)
@@ -243,6 +245,7 @@ def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
     print('==>%s' % reason_col_name)
     bid = kwargs['bid']
     fid = kwargs['fid']
+    datapath = kwargs['datapath']
 
     inv_file = kwargs['inventory_file']
     dtloader = data_process(datapath)
@@ -272,3 +275,56 @@ def reason_salesforce_x_inventory(sspd: pd.DataFrame, jsKey='',**kwargs):
             lambda x: json.dumps({jsKey: [x]})
         )
     return clpair_interest[[fid, bid, reason_col_name]]
+
+def reason_salesforce_close_2_current_location(sspd: pd.DataFrame, jsKey='',**kwargs):
+    reason_col_name = sys._getframe().f_code.co_name
+    print('==>%s' % reason_col_name)
+    bid = kwargs['bid']
+    fid = kwargs['fid']
+    ls_file = kwargs['location_scorecard_file']
+    datapath = kwargs['datapath']
+
+    lat = 'latitude'
+    lng = 'longitude'
+    dist = 'geo_dist'
+    ghash = 'geohash'
+    dist_thresh = 3e3
+    precision = 4
+
+    assert( lat in sspd.columns and lng in sspd.columns )
+
+    loc_feat = pd.read_csv(pj(datapath,ls_file))[[bid,lat,lng]]
+    loc_feat = loc_feat.dropna()
+    loc_feat = geohash(loc_feat,dst_col=ghash,precision=precision)
+
+    sspd = sspd[[fid,bid,lat,lng]]
+    sspd = sspd.dropna()
+    sspd = geohash( sspd,dst_col=ghash,precision=precision )
+
+    clpair = sspd.merge(loc_feat,on=[bid,ghash], suffixes= ['_grd','_prd'] )
+    # clpair = clpair[[fid,bid,lat,lng]].merge(loc_feat,on=bid,suffixes = ['_grd','_prd'] )
+
+    if not clpair.empty:
+        clpair[dist] = clpair.apply(
+            lambda row: geo_distance(row[lng+'_prd'], row[lat+'_prd'], row[lng+'_grd'], row[lat+'_grd']),
+            axis=1)
+    else:
+        clpair = pd.DataFrame(columns=[fid,bid,dist])
+
+    clpair = clpair.loc[clpair[dist]<=dist_thresh]
+
+    if clpair.empty:
+        clpair = pd.DataFrame(columns=[fid, bid, reason_col_name])
+    else:
+        print('==> Coverage:%1.3f' % (len(clpair) / len(sspd)))
+        reason_desc = '[Location] This location is close to its current location(<=%1.1f km) according to salesforce.'
+        clpair[reason_col_name] = clpair[dist].apply(
+            lambda x: json.dumps({jsKey: [ (reason_desc%float(x)) ] })
+        )
+
+    return clpair[[fid,bid,reason_col_name]]
+
+
+
+
+

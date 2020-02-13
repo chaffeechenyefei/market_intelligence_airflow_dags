@@ -301,7 +301,9 @@ def reason_salesforce_close_2_current_location(sspd: pd.DataFrame, jsKey='',**kw
     sspd = sspd.dropna()
     sspd = geohash( sspd,dst_col=ghash,precision=precision )
 
+
     clpair = sspd.merge(loc_feat,on=[bid,ghash], suffixes= ['_grd','_prd'] )
+    print('--> %d pairs matched with geohash'%len(clpair))
     # clpair = clpair[[fid,bid,lat,lng]].merge(loc_feat,on=bid,suffixes = ['_grd','_prd'] )
 
     if not clpair.empty:

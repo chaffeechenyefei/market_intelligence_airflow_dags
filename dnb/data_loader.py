@@ -74,6 +74,7 @@ class data_process(object):
     def load_submarket_avg_price(self,db='compstak',dbname='tetris_mv_tetris_transactions_2016_current.csv'):
         compstak_db = self.load_compstak(db=db,dbname=dbname)
         compstak_db = compstak_db.dropna(subset=['effective_rent'])
+        print('averaging')
         submarket_avg = compstak_db.groupby(['city', 'submarket'])[['effective_rent']].quantile(
             0.3).reset_index().rename(columns={
             'effective_rent': 'low_effective_rent'
@@ -85,6 +86,7 @@ class data_process(object):
         #default value
         city_avg['submarket'] = 'city_level'
 
+        print('Concat')
         submarket_avg = pd.concat([city_avg, submarket_avg], axis=0, sort=False)
         print('%d average price data generated'%len(submarket_avg))
         return submarket_avg

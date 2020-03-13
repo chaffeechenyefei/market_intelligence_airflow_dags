@@ -81,6 +81,7 @@ cache : flag of whether use the reason file to merge reason
 """
 hdargs = {
     "run_root":"/home/ubuntu/location_recommender_system",
+    # "run_root":"/Users/yefeichen/Database/env_mi_dev",
     "ls_card":"location_scorecard_200106.csv",
     "apps":"_200106.csv",
     "otversion":"_200106.csv",

@@ -46,6 +46,10 @@ class data_process(object):
             'city':'city',
             'bid':'property_id',
             'price':'effective_rent',
+            'size':'transaction_size',
+            'lng':'longitude',
+            'lat':'latitude',
+            'submarket':'submarket'
         }
 
         self.sil = silence
@@ -62,9 +66,81 @@ class data_process(object):
         lease_date = self.cpstk_col['lease_date']
         bid = self.cpstk_col['bid']
         price = self.cpstk_col['price']
-        compstak_db = pd.read_csv(pj(db_path, dbname))[[uid,city,lease_date,bid,price]]
+        sbm = self.cpstk_col['submarket']
+        compstak_db = pd.read_csv(pj(db_path, dbname))[[uid,city,sbm,lease_date,bid,price]]
         print('%d compstak loaded'%len(compstak_db))
         return compstak_db
+
+    def load_submarket_avg_price(self,db='compstak',dbname='tetris_mv_tetris_transactions_2016_current.csv'):
+        compstak_db = self.load_compstak(db=db,dbname=dbname)
+        compstak_db = compstak_db.dropna(subset=['effective_rent'])
+        submarket_avg = compstak_db.groupby(['city', 'submarket'])[['effective_rent']].quantile(
+            0.3).reset_index().rename(columns={
+            'effective_rent': 'low_effective_rent'
+        })
+
+        city_avg = compstak_db.groupby(['city'])[['effective_rent']].quantile(0.3).reset_index().rename(columns={
+            'effective_rent': 'low_effective_rent'
+        })
+        #default value
+        city_avg['submarket'] = 'city_level'
+
+        submarket_avg = pd.concat([city_avg, submarket_avg], axis=0, sort=False)
+        print('%d average price data generated'%len(submarket_avg))
+        return submarket_avg
+
+    def load_compstak_aligned(self,db='compstak',dbname='tetris_mv_tetris_transactions_2016_current.csv'):
+        db_path = pj(self.root_path,db)
+        uid = self.cpstk_col['uid']
+        city = self.cpstk_col['city']
+        lease_date = self.cpstk_col['lease_date']
+        bid = self.cpstk_col['bid']
+        price = self.cpstk_col['price']
+        lng = self.cpstk_col['lng']
+        lat = self.cpstk_col['lat']
+        sz = self.cpstk_col['size']
+        sbm = self.cpstk_col['submarket']
+
+        today = datetime.date.today().strftime('%Y-%m-%d')
+        compstak_db = pd.read_csv(pj(db_path, dbname))[[uid,city,sbm,lease_date,bid,price,sz,lat,lng]].dropna(subset=[lat,lng])
+        compstak_db[sbm] = compstak_db[sbm].fillna('city_level')
+        compstak_db[lease_date] = compstak_db[lease_date].fillna(today)
+        compstak_db = compstak_db.loc[lambda df: df[lease_date] >= today]
+        #logic aligned with Matt
+        compstak_db = compstak_db.sort_values([uid,lease_date]).drop_duplicates([uid],keep='first')
+        print('%d compstak loaded'%len(compstak_db))
+        return compstak_db
+
+    def load_compstak_filter(self, db='compstak', dbname='tetris_mv_tetris_transactions_2016_current.csv'):
+        """
+        tenant_id,city,property is unique
+        expiration_date > current_time
+        """
+        compstak_dat = self.load_compstak(db=db, dbname=dbname)
+        uid = self.cpstk_col['uid']
+        city = self.cpstk_col['city']
+        lease_date = self.cpstk_col['lease_date']
+        bid = self.cpstk_col['bid']
+        price = self.cpstk_col['price']
+
+        current_date = datetime.datetime.now()
+        current_time = current_date.strftime("%Y-%m-%d")
+        cpstk_dat_flt = compstak_dat.loc[compstak_dat[lease_date] > current_time]
+        cpstk_dat_dup = cpstk_dat_flt.sort_values([uid, city, bid, lease_date]) \
+            .drop_duplicates([uid, city, bid], keep='last')
+        print('%d compstak remain after filter' % len(cpstk_dat_dup))
+        return cpstk_dat_dup
+
+    def load_cdm_capacity(self, db='inventory', dbname='central_cdm_reservables_20200310.csv'):
+        db_path = pj(self.root_path, db, dbname)
+        cdm_capacity = pd.read_csv(db_path, error_bad_lines=False)
+        #         ['LOCATION_UUID', 'RESERVABLE_UUID', 'RESERVABLE_NAME', 'CAPACITY_DESK',
+        #        'TOTAL_PRICE_USD', 'AVAILABILITY', 'MOVE_IN_DATE', 'MOVE_OUT_DATE',
+        #        'NOTES', 'AVAILABLE_AT', 'PRODUCT_TYPE']
+        cdm_capacity = cdm_capacity[['LOCATION_UUID', 'AVAILABLE_AT', 'CAPACITY_DESK']].rename(
+            columns={'LOCATION_UUID': 'atlas_location_uuid',
+                     'AVAILABLE_AT': 'available_at', 'CAPACITY_DESK': 'capacity_desk'})
+        return cdm_capacity
 
     def load_inventory(self, db='compstak', dbname='inventory_bom.csv'):
         db_path = pj(self.root_path, db)

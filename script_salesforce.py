@@ -27,7 +27,7 @@ def load_salesforce_dnb_match(db='' ,table='relation_dnb_account_0120.csv'):
     city = 'physical_city'
     dnb_city = sfdnb.groupby([cid ,city]).first().reset_index()[[cid ,city]].rename(columns={city :'city'})
     print( '%d dnb_city generated' %len(dnb_city))
-    dnb_city.to_csv(pj(datapath_mid ,'salesforce_comp_city_from_opp.csv'))
+    dnb_city.to_csv(pj(datapath_mid ,salesforce_dnb_file))
     return sfdnb
 
 

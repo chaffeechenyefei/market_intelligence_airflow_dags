@@ -74,7 +74,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
 
     # compstak_db = pd.read_csv(pjoin(datapath, compstak_file))[
     #     ['tenant_id', 'expiration_date', 'effective_rent', 'city','latitude','longitude']]
-    compstak_db = pd.read_csv(pjoin(datapath,compstak_TIM_file))[['tenant_id', 'expiration_date', 'effective_rent', 'city','submarket','latitude','longitude']]
+    compstak_db = pd.read_csv(pjoin(datapath,compstak_TIM_file))[['tenant_id','transaction_size' ,'expiration_date', 'effective_rent', 'city','submarket','latitude','longitude']]
     compstak_submarket_price = pd.read_csv(pjoin(datapath,compstak_submarket_file))[['city','submarket','low_effective_rent']]
 
     # compstak_dnb = pd.read_csv(pjoin(datapath, compstak_dnb_match_file))[['tenant_id', cid, 'physical_city']].rename(
@@ -449,7 +449,7 @@ def reason_close_2_current_location_compstak(sub_reason_col_name, sub_reason_fil
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
     recall_com = sub_rec_location_distance(reason_col_name=sub_reason_col_name)
-    sub_close_loc = recall_com.get_reason_with_sspd_geo(sspd=sspd, loc_feat=loc_feat, dist_thresh=3.2e3,jsFLG=True,jsKey=jsKey)
+    sub_close_loc = recall_com.get_reason_with_sspd_geo(sspd=sspd, loc_feat=loc_feat, dist_thresh=3.2e3,jsFLG=True,jsKey=jsKey,isMile=True)
 
     sub_close_loc = sub_close_loc.drop_duplicates([cid,bid])
 

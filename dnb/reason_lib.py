@@ -128,7 +128,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
             sub_reason_file_name = sub_reason_file_names[reason_name]
             #if produce, it will be removed.
             sub_reason_full_file_name = pj(datapath_mid,sub_reason_file_name)
-            if os.path.exists():
+            if os.path.exists(sub_reason_full_file_name):
                 os.remove(sub_reason_full_file_name)
             jsKey = reason_names[reason_name]["rsKey"]
             exe_func = globals()[reason_name]

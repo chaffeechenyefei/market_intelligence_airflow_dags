@@ -480,7 +480,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
 
     sspd = sspd.merge(cdm_capacity,on=bid,suffixes=sfx).dropna(subset=['capacity_desk','demand_desk'])
 
-    sspd = sspd.loc[lambda df: (df['available_at']<=df['expiration_date']) & (df['capacity_desk'] >= df['demand_size']/100 ) ]
+    sspd = sspd.loc[lambda df: (df['available_at']<=df['expiration_date']) & (df['capacity_desk'] >= df['demand_desk']) ]
 
     reason_desc = 'The capacity (%d) of this location can hold the client\'s company (%d).'
 

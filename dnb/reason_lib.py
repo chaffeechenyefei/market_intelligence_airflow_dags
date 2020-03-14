@@ -485,7 +485,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
     reason_desc = 'The capacity (%d) of this location can hold the client\'s company (%d).'
 
     sspd[sub_reason_col_name] = sspd.apply(lambda df:
-                reason_desc%(int(df['capacity_desk']),int(df['demand_size'])),axis=1 )
+                reason_desc%(int(df['capacity_desk']),int(df['demand_desk'])),axis=1 )
 
     sspd = sspd.drop_duplicates([cid,bid])
 

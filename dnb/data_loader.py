@@ -143,6 +143,9 @@ class data_process(object):
         cdm_capacity = cdm_capacity[['LOCATION_UUID', 'AVAILABLE_AT', 'CAPACITY_DESK']].rename(
             columns={'LOCATION_UUID': 'atlas_location_uuid',
                      'AVAILABLE_AT': 'available_at', 'CAPACITY_DESK': 'capacity_desk'})
+        cdm_capacity = cdm_capacity.dropna().reset_index(drop=True)
+        cdm_capacity = cdm_capacity.sort_values(['atlas_location_uuid','available_at','capacity_desk'])\
+            .drop_duplicates(['atlas_location_uuid','available_at'],keep='last')
         return cdm_capacity
 
     def load_inventory(self, db='compstak', dbname='inventory_bom.csv'):

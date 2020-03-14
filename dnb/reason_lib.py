@@ -88,7 +88,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
     compstak_dnb_city = compstak_dnb
     print('==> %d compstak_db loaded' % len(compstak_db_city))
 
-    cdm_capacity = pd.read_csv(pjoin(datapath,cdm_capacity_file))
+    cdm_capacity = pd.read_csv(pjoin(datapath,cdm_capacity_file),index_col=0)
     print('==> %d cdm capacity loaded'%len(cdm_capacity))
 
 

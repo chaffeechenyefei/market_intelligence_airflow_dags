@@ -1216,6 +1216,49 @@ class sub_rec_location_distance(object):
         self.cid = cid
         self.bid = bid
 
+    def get_reason_with_sspd_geo(self, sspd, loc_feat, dist_thresh=3.2e3,jsFLG=False,jsKey='A',isMile=False):
+        """
+        In this version sspd has the lat and lng of its current location
+        sspd: [cid,bid,lat,lng]
+        """
+        # loc_comp_loc = sspd.merge(comp_loc, how='inner', on='duns_number', suffixes=['', '_grd']) \
+        #     [['atlas_location_uuid', 'duns_number', 'atlas_location_uuid_grd']]
+
+        cid = self.cid
+        bid = self.bid
+
+        rt_key_col = [bid, 'latitude', 'longitude']
+        loc_comp_loc = sspd[[bid, cid,'longitude','latitude']].merge(loc_feat[rt_key_col], on=bid, suffixes=['', '_pred'])
+
+        if len(loc_comp_loc) > 0:
+            loc_comp_loc['geo_dist'] = loc_comp_loc.apply(
+                lambda row: geo_distance(row['longitude'], row['latitude'], row['longitude_pred'], row['latitude_pred']),
+                axis=1)
+        else:
+            loc_comp_loc = pd.DataFrame(columns=[cid,bid,'geo_dist'])
+
+        loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
+
+        if isMile:
+            loc_comp_loc['geo_dist'] = round(loc_comp_loc['geo_dist'].astype(float) / 1e3 * 0.621371,1).astype(str)
+            loc_comp_loc[
+                self.reason_col_name] = 'Recommended location is close to the client\'s current location (<' + loc_comp_loc[
+                'geo_dist'] + ' miles). '
+        else:
+            loc_comp_loc['geo_dist'] = round(loc_comp_loc['geo_dist'].astype(float) / 1e3, 1).astype(str)
+            loc_comp_loc[
+                self.reason_col_name] = 'Recommended location is close to the client\'s current location (<' + loc_comp_loc['geo_dist'] + 'km). '
+
+        scKey = secondKey.Distance.value
+
+        dfKey = '%s,%s'%(jsKey,scKey)
+        if jsFLG:
+            loc_comp_loc[self.reason_col_name] = loc_comp_loc[self.reason_col_name].apply(
+                lambda x: json.dumps( {dfKey:[str(x)] })
+            )
+
+        return loc_comp_loc[[bid, cid, self.reason_col_name]]
+
     def get_reason(self, sspd, loc_feat, comp_feat, dist_thresh=3.2e3,jsFLG=False,jsKey='A',isMile=False):
         # loc_comp_loc = sspd.merge(comp_loc, how='inner', on='duns_number', suffixes=['', '_grd']) \
         #     [['atlas_location_uuid', 'duns_number', 'atlas_location_uuid_grd']]

@@ -442,14 +442,14 @@ def reason_close_2_current_location_compstak(sub_reason_col_name, sub_reason_fil
     compstak_dnb_city = kwargs['compstak_dnb_city']
 
     total_pairs_num = len(sspd)
-    sspd = sspd.merge(compstak_dnb_city[['tenant_id', cid]], on=cid)[['tenant_id',cid]]
-    compstak_db_city = compstak_db_city[['tenant_id','longitude','latitude']].dropna()
-    comp_feat = sspd.merge(compstak_db_city, on='tenant_id')
+    sspd = sspd.merge(compstak_dnb_city[['tenant_id', cid]], on=cid)[['tenant_id',cid,bid]]
+    compstak_db_tmp = compstak_db_city[['tenant_id','longitude','latitude']].dropna()
+    sspd = sspd.merge(compstak_db_tmp, on='tenant_id')#[bid,cid,lat,lng]
 
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
     recall_com = sub_rec_location_distance(reason_col_name=sub_reason_col_name)
-    sub_close_loc = recall_com.get_reason(sspd=sspd, loc_feat=loc_feat, comp_feat=comp_feat, dist_thresh=3.2e3,jsFLG=True,jsKey=jsKey)
+    sub_close_loc = recall_com.get_reason_with_sspd_geo(sspd=sspd, loc_feat=loc_feat, dist_thresh=3.2e3,jsFLG=True,jsKey=jsKey)
 
     sub_close_loc = sub_close_loc.drop_duplicates([cid,bid])
 

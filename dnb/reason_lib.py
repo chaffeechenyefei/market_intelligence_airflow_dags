@@ -469,7 +469,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
     total_pairs_num = len(sspd)
     sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
 
-    cpstkdb = compstak_db_city[['tenant_id', 'city', 'expiration_date', 'transaction_size']]
+    cpstkdb = compstak_db_city[['tenant_id', 'city', 'expiration_date', 'transaction_size']].dropna(subset=['transaction_size'])
     cpstkdnb = compstak_dnb_city[[cid, 'tenant_id']]
     dnb_demand = cpstkdnb.merge(cpstkdb, on='tenant_id', suffixes=sfx)
     dnb_demand['demand_desk'] = dnb_demand['transaction_size'].astype(int)/100

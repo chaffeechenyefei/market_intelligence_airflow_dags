@@ -472,7 +472,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
     cpstkdb = compstak_db_city[['tenant_id', 'city', 'expiration_date', 'transaction_size']]
     cpstkdnb = compstak_dnb_city[[cid, 'tenant_id']]
     dnb_demand = cpstkdnb.merge(cpstkdb, on='tenant_id', suffixes=sfx)
-    dnb_demand['demand_desk'] = sspd['transaction_size'].astype(int)/100
+    dnb_demand['demand_desk'] = dnb_demand['transaction_size'].astype(int)/100
     dnb_demand['demand_desk'] = dnb_demand['demand_desk'].astype(int)
     dnb_demand = dnb_demand.loc[lambda df: df['demand_desk'] > 0 ]
 

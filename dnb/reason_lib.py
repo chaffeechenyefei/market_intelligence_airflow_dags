@@ -489,7 +489,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
 
     sspd = sspd.drop_duplicates([cid,bid])
 
-    scKey = secondKey.Size
+    scKey = secondKey.Size.value
     dfKey = '%s,%s'%(jsKey,scKey)
 
     sspd[sub_reason_col_name] = sspd[sub_reason_col_name].apply(

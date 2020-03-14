@@ -516,14 +516,14 @@ class sub_rec_condition(object):
             val = max(val, 10)
             vals.append(val)
 
-        assert (cond_cols.len() == vals.len())
+        assert (len(cond_cols) == len(vals))
 
         reason_desc = 'There are %s near this area, which is above the city average.'
         def translate(df:pd.DataFrame,cond_cols,vals,reasons):
             reason_lst = []
             for i,cond_col in enumerate(cond_cols):
                 val,reason = vals[i],reasons[i]
-                if ( int(df[cond_col]) > val ):
+                if df[cond_col] and ( int(df[cond_col]) > val ):
                     reason_lst.append( '%d %s'%(df[cond_col],reason))
             reason_lst = list2str_and(reason_lst,delimeter=', ')
             if reason_lst:

@@ -660,12 +660,6 @@ def merge_str_2_json_rowise_reformat_v3(row, src_cols=[], jsKey='reasons'):
     else:
         return ''
 
-def merge_str_2_json_rowise_reformat_v3(row, src_cols: list, jsKey='reasons'):
-    """
-    row in dataframe
-    output json style string
-    """
-
 
 def merge_str_2_json_for_filter(row, src_cols: list, jsKey='filters',default=True):
     """

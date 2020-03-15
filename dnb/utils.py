@@ -1187,7 +1187,7 @@ class sub_rec_great_location(object):
         bid = self.bid
         pid = 'property_id'
         loc_feat = loc_feat.fillna(-1)
-        loc_feat[pid] = loc_feat[bid].apply( lambda df: str(df[bid]).replace('-','') )
+        loc_feat[pid] = loc_feat[bid].apply( lambda df: str(df).replace('-','') )
 
         loc_comp_loc = sspd.merge(loc_feat,on=bid,suffixes=['','_pred'])#[cid,bid,pid,pid_pred,feat]
         loc_comp_loc = loc_comp_loc.merge(loc_feat,on=pid,suffixes=['','_grd'])#[cid,bid,pid,bid_grd,pid_pred,feat_grd]

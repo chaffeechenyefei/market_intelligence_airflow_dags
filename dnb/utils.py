@@ -800,6 +800,89 @@ class feature_translate_of_locaiton_similar_in(object):
             featsrc.location,
             'The business environment, especially the percentage of employees of core categories relevant to your company, in this area is similar to your current location, and will meet your business development needs')
 
+class location_condition(Enum):
+    eq = 'equal'
+    gt = 'greater'
+
+class feature_translate_of_locaiton_great_at(object):
+    def __init__(self,jsKey='A'):
+        self.col2phs = {}
+        self.jsKey = jsKey
+        self.init_dict()
+
+        self.keytuple = [key for key in self.col2phs.keys() if isinstance(key, tuple)]
+
+    def getItem(self, gvkey,status):
+        # tuple matching first
+        for key in self.keytuple:
+            if gvkey in key:
+                return {'status': True,
+                        'key': gvkey,
+                        'item': self.col2phs[key][status]}
+        # precision matching
+        if gvkey in self.col2phs.keys():
+            return {'status': True,
+                    'key': gvkey,
+                    'item': self.col2phs[gvkey][status]}
+
+        return {'status': False}
+
+    def init_dict(self):
+        reason_desc = 'The building class of this WeWork location is %s the client\'s current space. '
+        dfKey = '%s,%s'%(self.jsKey,secondKey.GB.value)
+        self.col2phs['building_class'] = {
+            location_condition.gt.value: {dfKey:[reason_desc%'better than']} ,
+            location_condition.eq.value: {dfKey:[reason_desc%'equal to']}
+        }
+        reason_desc = 'The demographics, especially the population density, in this WeWork location is %s the client\'s current location, and will meet the client\'s hiring needs. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GD.value)
+        self.col2phs['population_density'] = {
+            location_condition.gt.value: {dfKey:[reason_desc%'higher than']},
+            location_condition.eq.value: {dfKey:[reason_desc%'equal to']}
+        }
+        reason_desc = 'This WeWork location is %s accessible by walk %s the client\'s current location. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GTR.value)
+        self.col2phs['walk_score'] = {
+            location_condition.gt.value: {dfKey: [reason_desc%('more easily','than')]},
+            location_condition.eq.value: {dfKey: [reason_desc%('as easily','as')]}
+        }
+        reason_desc = 'This WeWork location is %s accessible by bike %s the client\'s current location. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GTR.value)
+        self.col2phs['bike_score'] = {
+            location_condition.gt.value: {dfKey: [reason_desc%('more easily','than')]},
+            location_condition.eq.value: {dfKey: [reason_desc%('as easily','as')]}
+        }
+        reason_desc = 'There are enough retail stores in this region as the client\'s current location. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GA.value)
+        self.col2phs['num_retail_stores'] = {
+            location_condition.gt.value: {dfKey:[reason_desc]} ,
+            location_condition.eq.value: {dfKey:[reason_desc]}
+        }
+        reason_desc = 'The medical service in this WeWork location is as good as the client\'s current location. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GA.value)
+        self.col2phs['num_doctor_offices'] = {
+            location_condition.gt.value: {dfKey:[reason_desc]},
+            location_condition.eq.value: {dfKey:[reason_desc]}
+        }
+        reason_desc = 'Eating and drinking around this region are as convenient as the client\'s current location. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GA.value)
+        self.col2phs[('num_eating_places', 'num_drinking_places')] = {
+            location_condition.gt.value: {dfKey:[reason_desc]},
+            location_condition.eq.value: {dfKey:[reason_desc]}
+        }
+        reason_desc = 'This WeWork location has as many hotels to host your visitors as the client\'s current location. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GA.value)
+        self.col2phs['num_hotels'] = {
+            location_condition.gt.value: {dfKey:[reason_desc]},
+            location_condition.eq.value: {dfKey:[reason_desc]}
+        }
+        reason_desc = 'This WeWork location has as many gyms as as the client\'s current location to take care of the health of their employee. '
+        dfKey = '%s,%s' % (self.jsKey, secondKey.GA.value)
+        self.col2phs['num_fitness_gyms'] = {
+            location_condition.gt.value: {dfKey:[reason_desc]},
+            location_condition.eq.value: {dfKey:[reason_desc]}
+        }
+
 
 class feature_translate(object):
     def __init__(self):
@@ -1055,6 +1138,111 @@ class sub_rec_similar_location(object):
             loc_comp_loc[[self.reason_col_name]] = reason + loc_comp_loc[self.reason_col_name] + outer_sep
         return loc_comp_loc
 
+
+
+def merge_lst_of_dict(lst_dict):
+    """
+    Merge a list of dict {'key':['a','b']} into a union dict
+    :param lst_dict: 
+    :return: 
+    """
+    n_reasons = {}
+    kyset = [list(d.keys()) for d in lst_dict]
+    kyset = list(itertools.chain.from_iterable(kyset))
+    kyset = list(set(kyset))
+
+    for k in kyset:
+        lst = [d.get(k) for d in lst_dict if d.get(k)]
+        # lst = [ d for d in lst if isinstance(d,list) ]
+        reason_item = list(itertools.chain.from_iterable(lst))
+        reason_item = [d for d in reason_item if d and d != '']
+        # eliminate duplicate phrase in case
+        reason_item = list(set(reason_item))
+        n_reasons[k] = reason_item
+    return n_reasons
+
+
+class sub_rec_great_location(object):
+    """
+    json++
+    In which feature, the recommended location is great than the current location.
+    """
+
+    def __init__(self, cont_col_name, dummy_col_name, reason_col_name='reason', jsKey = 'A', cid='duns_number',
+                 bid='atlas_location_uuid'):
+        self.cont_col_name = cont_col_name
+        self.dummy_col_name = dummy_col_name
+        self.reason_col_name = reason_col_name
+        self._info = 'It will keep index of sspd'
+        self.reason_translator = feature_translate_of_locaiton_great_at(jsKey=jsKey)
+        self.cid = cid
+        self.bid = bid
+
+    def get_reason(self, sspd, loc_feat):
+        """
+        sspd = [cid,bid,pid]
+        Always output json format
+        """
+        cid = self.cid
+        bid = self.bid
+        pid = 'property_id'
+        loc_feat = loc_feat.fillna(-1)
+        loc_feat[pid] = loc_feat[bid].apply( lambda df: str(df[bid]).replace('-','') )
+
+        loc_comp_loc = sspd.merge(loc_feat,on=bid,suffixes=['','_pred'])#[cid,bid,pid,pid_pred,feat]
+        loc_comp_loc = loc_comp_loc.merge(loc_feat,on=pid,suffixes=['','_grd'])#[cid,bid,pid,bid_grd,pid_pred,feat_grd]
+
+        def translate(df:pd.DataFrame,dummy_col_name,cont_col_name):
+            reason_lst = []
+            for col in dummy_col_name:
+                status = None
+                if str(df[col+'_grd']) not in ['A','B','C']:
+                    pass
+                elif str(df[col]) < str(df[col+'_grd']): #'A' < 'B' Good
+                    status = location_condition.gt.value
+                elif str(df[col]) == str(df[col+'_grd']):#Equal
+                    status = location_condition.eq.value
+                else:#Bad
+                    pass
+
+                if status:
+                    cur_reason = self.reason_translator.getItem(gvkey=col, status=status)
+                    if cur_reason['status']:
+                        reason_lst.append(cur_reason['item'])
+
+            for col in cont_col_name:
+                status = None
+                if df[col+'_grd'] <= 0:
+                    pass
+                elif str(df[col]) > str(df[col+'_grd']):#Good
+                    status = location_condition.gt.value
+                elif str(df[col]) == str(df[col+'_grd']):#Equal
+                    status = location_condition.eq.value
+                else:#Bad
+                    pass
+
+                if status:
+                    cur_reason = self.reason_translator.getItem(gvkey=col, status=status)
+                    if cur_reason['status']:
+                        reason_lst.append(cur_reason['item'])
+
+            #transfer reason_lst -> str()
+            reason = merge_lst_of_dict(reason_lst)
+            if reason:
+                return json.dumps(reason)
+            else:
+                return None
+
+        if self.reason_col_name not in loc_comp_loc.columns:
+            loc_comp_loc[self.reason_col_name] = None
+
+        loc_comp_loc[self.reason_col_name] = loc_comp_loc.apply(
+            lambda df: translate(df,dummy_col_name=self.dummy_col_name,cont_col_name=self.cont_col_name), axis=1
+        )
+
+        loc_comp_loc = loc_comp_loc[[cid,bid,self.reason_col_name]].dropna(subset = self.reason_col_name)
+
+        return loc_comp_loc
 
 class sub_rec_similar_company_v2(object):
     """

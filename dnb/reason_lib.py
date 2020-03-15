@@ -56,6 +56,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
     comp_feat = pd.read_csv(pjoin(datapath, cfile[ind_city]))
     comp_loc = pd.read_csv(pjoin(datapath_mid, clfile[ind_city]))
     loc_feat = pd.read_csv(pjoin(datapath, lfile))
+    #Attention loc_feat is shrinked
     loc_feat = loc_feat.merge(comp_loc[[bid]].groupby(bid).first().reset_index(),
                               on=bid, suffixes=sfx)
     print('Global filtering')
@@ -393,7 +394,7 @@ def reason_similar_biz( sub_reason_col_name, sub_reason_file_name, jsKey ,**kwar
 
     # reason_desc = '[Industry Friendly Location] The area of this location is great for the account\'s industry(%s). ' \
     #               'Companies such as %s in the same industry are already in this location.'
-    reason_desc = 'Companies in the same industry (%s) are present in this location, including %s.'
+    reason_desc = 'Companies in the same industry (%s) are present in this location, including %s according to DnB.'
     sub_pairs = recall_com.get_candidate_location_for_company_fast(query_comp_loc=query_comp_loc,
                                                                     reason=reason_desc,
                                                                    jsFLG=True,jsKey=jsKey)
@@ -687,6 +688,35 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, jsKey, **k
     print('==> Coverage: %1.2f' % (len(sim_comp_name) / total_pairs_num))
     sim_comp_name.to_csv(sub_reason_file)
 
+
+def reason_great_location(sub_reason_col_name, sub_reason_file_name, jsKey ,**kwargs):
+    """
+    """
+    reason_col_name = sys._getframe().f_code.co_name
+    print('%s: Is the recommended location greater than current one?'%reason_col_name)
+    sspd =  kwargs['sspd']
+    loc_feat = kwargs['loc_feat']
+
+    compstak_db_city = kwargs['compstak_db_city']
+    compstak_dnb_city = kwargs['compstak_dnb_city']
+
+    total_pairs_num = len(sspd)
+    sub_reason_file = pjoin(datapath_mid, sub_reason_file_name)
+
+    sspd = sspd.merge(compstak_dnb_city[['tenant_id', cid]], on=cid)[['tenant_id',cid,bid]]
+    compstak_db_tmp = compstak_db_city[['tenant_id','property_id']].dropna()
+
+    sspd = sspd.merge(compstak_db_tmp, on='tenant_id')#[bid,cid,property_id]
+    sspd = sspd.drop_duplicates([bid,cid])
+
+    cont_col_nameL = feature_column['cont_col_nameL']
+    dummy_col_nameL = feature_column['dummy_col_nameL']
+    recall_com = sub_rec_great_location(cont_col_name=cont_col_nameL, dummy_col_name=dummy_col_nameL,
+                                           reason_col_name=sub_reason_col_name, jsKey=jsKey,cid=cid, bid=bid)
+    loc_comp_loc = recall_com.get_reason(sspd=sspd, loc_feat=loc_feat)
+
+    print('==> Coverage: %1.2f' % (len(loc_comp_loc) / total_pairs_num))
+    loc_comp_loc.to_csv(sub_reason_file)
 
 def reason_similar_location(sub_reason_col_name, sub_reason_file_name, jsKey ,**kwargs):
     """

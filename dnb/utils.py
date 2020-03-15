@@ -1240,7 +1240,7 @@ class sub_rec_great_location(object):
             lambda df: translate(df,dummy_col_name=self.dummy_col_name,cont_col_name=self.cont_col_name), axis=1
         )
 
-        loc_comp_loc = loc_comp_loc[[cid,bid,self.reason_col_name]].dropna(subset = self.reason_col_name)
+        loc_comp_loc = loc_comp_loc[[cid,bid,self.reason_col_name]].dropna(subset = [self.reason_col_name])
 
         return loc_comp_loc
 

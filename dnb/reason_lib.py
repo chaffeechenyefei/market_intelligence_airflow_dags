@@ -165,6 +165,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
             sample_sspd[ratioKey.size.value] = sample_sspd[ratioKey.size.value].fillna(0.7) if ratioKey.size.value in sample_sspd.columns else 1.0
             sample_sspd[ratioKey.price.value] = sample_sspd[ratioKey.price.value].fillna(0.9) if ratioKey.price.value in sample_sspd.columns else 1.0
             sample_sspd['similarity'] = sample_sspd['similarity']*sample_sspd[ratioKey.dist.value]*sample_sspd[ratioKey.size.value]*sample_sspd[ratioKey.price.value]
+            sample_sspd['similarity'] = sample_sspd['similarity'].pow(1/3)
 
         sample_sspd['filter'] = ''
     else:
@@ -563,7 +564,7 @@ def reason_talent_score(sub_reason_col_name, sub_reason_file_name, jsKey, **kwar
     talentdb = dataloadCls.load_talent()
     lscard = dataloadCls.load_location_scorecard_msa()
 
-    recall_com = sub_rec_talent(talentdb=talentdb,lsdb=lscard,reason='[Talent] Talent score here is %s.')
+    recall_com = sub_rec_talent(talentdb=talentdb,lsdb=lscard,reason='Talent score here is %s.')
     sub_talent_db = recall_com.get_reason(sspd=sspd,reason_col=sub_reason_col_name,jsFLG=True,jsKey=jsKey)
 
     print('==> Coverage: %1.2f' % (len(sub_talent_db) / total_pairs_num))

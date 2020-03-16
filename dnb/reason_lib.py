@@ -155,6 +155,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
     sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
     sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason]
     if len(sample_sspd) > 0:
+        sample_sspd['reason'] = sample_sspd['reason'].fillna('')
         sample_sspd['reason'] = sample_sspd.apply(
             lambda x: merge_str_2_json_rowise_reformat_v3(row=x, src_cols=sorted_reason_col_name, jsKey='reasons'),
             axis=1)

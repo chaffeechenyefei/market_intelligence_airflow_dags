@@ -1448,7 +1448,7 @@ class sub_rec_location_distance(object):
         dfKey = '%s,%s'%(jsKey,scKey)
         if jsFLG:
             loc_comp_loc[self.reason_col_name] = loc_comp_loc[self.reason_col_name].apply(
-                lambda x: json.dumps( {dfKey:[str(x)] })
+                lambda x: json.dumps( {dfKey:[str(x)] }) if x else None
             )
 
         return loc_comp_loc[[bid, cid, self.reason_col_name,ratioKey.dist.value]]
@@ -1783,7 +1783,7 @@ class sub_rec_compstak_price(object):
         dfKey = '%s,%s' % (jsKey, scKey)
         if jsFLG:
             pricedb[reason_col] = pricedb[reason_col].apply(
-                lambda x: json.dumps( {dfKey:[str(x)]} )
+                lambda x: json.dumps( {dfKey:[str(x)]} ) if x else None
             )
 
         clpair = clpair.merge(pricedb[[cid, reason_col,ratioKey.price.value]], on=cid, suffixes=sfx)

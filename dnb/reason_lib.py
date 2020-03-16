@@ -150,7 +150,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
         else:
             print('%s skipped because no file is found in %s or not cached enable.' % (reason_name, str(db_path)))
 
-    sample_sspd = sample_sspd.fillna('')
+    # sample_sspd = sample_sspd.fillna('')
     print('Json format transforming...')
     sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
     sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason]
@@ -499,7 +499,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
         dfKey = '%s,%s'%(jsKey,scKey)
 
         sspd[sub_reason_col_name] = sspd[sub_reason_col_name].apply(
-            lambda x: json.dumps( {dfKey:[str(x)]} )
+            lambda x: json.dumps( {dfKey:[str(x)]} ) if x else None
         )
     else:
         sspd = pd.DataFrame(columns=[cid,bid,sub_reason_col_name,ratioKey.size.value])

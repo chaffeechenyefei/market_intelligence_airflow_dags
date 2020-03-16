@@ -457,7 +457,9 @@ def reason_close_2_current_location_compstak(sub_reason_col_name, sub_reason_fil
     print('==> Coverage: %1.2f' % (len(sub_close_loc) / total_pairs_num))
     sub_close_loc.to_csv(sub_reason_file)
 
-
+"""
+Need to check
+"""
 def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
     reason_col_name = sys._getframe().f_code.co_name
     print('%s: Inventory bom' % reason_col_name)
@@ -485,17 +487,20 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
 
     reason_desc = 'The capacity (%d) of this location can hold the client\'s company (%d).'
 
-    sspd[sub_reason_col_name] = sspd.apply(lambda df:
-                reason_desc%(int(df['capacity_desk']),int(df['demand_desk'])),axis=1 )
+    if not sspd.empty:#without it might cause a bug
+        sspd[sub_reason_col_name] = sspd.apply(lambda df:
+                    reason_desc%(int(df['capacity_desk']),int(df['demand_desk'])),axis=1 )
 
-    sspd = sspd.drop_duplicates([cid,bid])
+        sspd = sspd.drop_duplicates([cid,bid])
 
-    scKey = secondKey.Size.value
-    dfKey = '%s,%s'%(jsKey,scKey)
+        scKey = secondKey.Size.value
+        dfKey = '%s,%s'%(jsKey,scKey)
 
-    sspd[sub_reason_col_name] = sspd[sub_reason_col_name].apply(
-        lambda x: json.dumps( {dfKey:[str(x)]} )
-    )
+        sspd[sub_reason_col_name] = sspd[sub_reason_col_name].apply(
+            lambda x: json.dumps( {dfKey:[str(x)]} )
+        )
+    else:
+        sspd = pd.DataFrame(columns=[cid,bid,sub_reason_col_name])
 
     print('==> Coverage: %1.2f' % (len(sspd) / total_pairs_num))
     sspd.to_csv(sub_reason_file)

@@ -159,6 +159,15 @@ def prod_all_reason_in_one_func(ind_city, **context):
             lambda x: merge_str_2_json_rowise_reformat_v3(row=x, src_cols=sorted_reason_col_name, jsKey='reasons'),
             axis=1)
 
+        if hdargs["calibrationFLG"]:
+            assert( ratioKey.dist.value in sample_sspd.columns )
+            sample_sspd[ratioKey.dist.value] = sample_sspd[ratioKey.dist.value].fillna(0.7).astype(float)
+            assert (ratioKey.size.value in sample_sspd.columns)
+            sample_sspd[ratioKey.size.value] = sample_sspd[ratioKey.size.value].fillna(0.5).astype(float)
+            assert (ratioKey.price.value in sample_sspd.columns)
+            sample_sspd[ratioKey.price.value] = sample_sspd[ratioKey.price.value].fillna(0.7).astype(float)
+            sample_sspd['similarity'] = sample_sspd['similarity']*sample_sspd[ratioKey.dist.value]*sample_sspd[ratioKey.size.value]*sample_sspd[ratioKey.price.value]
+
         sample_sspd['filter'] = ''
         # filter_cols = [c for c in hdargs["filter_col_name"].keys() if c in sample_sspd.columns ]
         # if len(filter_cols) > 0:
@@ -485,11 +494,14 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
 
     sspd = sspd.loc[lambda df: (df['available_at']<=df['expiration_date']) & (df['capacity_desk'] >= df['demand_desk']) ]
 
+    sspd[ratioKey.size.value] = 1.0
+
     reason_desc = 'The capacity (%d) of this location can hold the client\'s company (%d).'
 
     if not sspd.empty:#without it might cause a bug
         sspd[sub_reason_col_name] = sspd.apply(lambda df:
                     reason_desc%(int(df['capacity_desk']),int(df['demand_desk'])),axis=1 )
+
 
         sspd = sspd.drop_duplicates([cid,bid])
 
@@ -500,10 +512,12 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
             lambda x: json.dumps( {dfKey:[str(x)]} )
         )
     else:
-        sspd = pd.DataFrame(columns=[cid,bid,sub_reason_col_name])
+        sspd = pd.DataFrame(columns=[cid,bid,sub_reason_col_name,ratioKey.size.value])
 
     print('==> Coverage: %1.2f' % (len(sspd) / total_pairs_num))
-    sspd.to_csv(sub_reason_file)
+
+    sspd[[cid,bid,sub_reason_col_name,ratioKey.size.value]].to_csv(sub_reason_file)
+
 
 def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
     """

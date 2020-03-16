@@ -10,7 +10,7 @@ import tqdm
 import json,itertools
 import datetime
 from dnb.data_loader import data_process
-from dnb.header import hdargs,secondKey
+from dnb.header import hdargs,secondKey,ratioKey
 
 pjoin = os.path.join
 sfx = ['','_right']
@@ -1385,7 +1385,6 @@ def geo_distance(lng1, lat1, lng2, lat2):
     dis = 2 * asin(sqrt(a)) * 6371 * 1000
     return dis
 
-
 class sub_rec_location_distance(object):
     """
     If the recommended location is close to the current location(distance <= dist_thresh),
@@ -1419,17 +1418,29 @@ class sub_rec_location_distance(object):
         else:
             loc_comp_loc = pd.DataFrame(columns=[cid,bid,'geo_dist'])
 
-        loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
+        def dist_ratio(x):
+            thres = 5000
+            min_val = 0.7
+            return max(exp(-x / (10 * thres)), min_val)
+
+        loc_comp_loc[ratioKey.dist.value] = loc_comp_loc['geo_dist'].apply(
+            lambda df: dist_ratio(df)
+        )
+
+        # loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
 
         if isMile:
             loc_comp_loc['geo_dist'] = round(loc_comp_loc['geo_dist'].astype(float) / 1e3 * 0.621371,1).astype(str)
-            loc_comp_loc[
-                self.reason_col_name] = 'Recommended location is close to the client\'s current location (<' + loc_comp_loc[
-                'geo_dist'] + ' miles). '
+            reason_desc = 'Recommended location is close to the client\'s current location (<%s miles).'
+            loc_comp_loc[self.reason_col_name] = loc_comp_loc['geo_dist'].apply(
+                lambda df: reason_desc%str(df) if float(df) <= 2.2 else None
+            )
         else:
             loc_comp_loc['geo_dist'] = round(loc_comp_loc['geo_dist'].astype(float) / 1e3, 1).astype(str)
-            loc_comp_loc[
-                self.reason_col_name] = 'Recommended location is close to the client\'s current location (<' + loc_comp_loc['geo_dist'] + 'km). '
+            reason_desc = 'Recommended location is close to the client\'s current location (<%skm).'
+            loc_comp_loc[self.reason_col_name] = loc_comp_loc['geo_dist'].apply(
+                lambda df: reason_desc%str(df) if float(df) <= 5 else None
+            )
 
         scKey = secondKey.Distance.value
 
@@ -1439,7 +1450,7 @@ class sub_rec_location_distance(object):
                 lambda x: json.dumps( {dfKey:[str(x)] })
             )
 
-        return loc_comp_loc[[bid, cid, self.reason_col_name]]
+        return loc_comp_loc[[bid, cid, self.reason_col_name,ratioKey.dist.value]]
 
     def get_reason(self, sspd, loc_feat, comp_feat, dist_thresh=3.2e3,jsFLG=False,jsKey='A',isMile=False):
         # loc_comp_loc = sspd.merge(comp_loc, how='inner', on='duns_number', suffixes=['', '_grd']) \
@@ -1746,11 +1757,24 @@ class sub_rec_compstak_price(object):
         clpair = sspd[[bid, cid]]
 
         pricedb = self.db.merge(self.submarketprice,on=['submarket','city'])
+        pricedb = pricedb.dropna(subset=['effective_rent', 'low_effective_rent'])
 
-        pricedb = pricedb.loc[lambda df: df['effective_rent'] >= df['low_effective_rent']]
-        pricedb[reason_col] = pricedb.apply(
-            lambda df: self.reason%( float(df['effective_rent']),float(df['low_effective_rent']) ), axis=1
-        )
+        def price_ratio(x, thresh):
+            thres = thresh
+            min_val = 0.7
+            return max(1 - exp(-x / (0.5 * thres)), min_val)
+
+        if not pricedb.empty:
+            pricedb[ratioKey.price.value] = pricedb.apply(
+                lambda df:price_ratio(df['effective_rent'],df['low_effective_rent'])
+            )
+
+            pricedb[reason_col] = pricedb.apply(
+                lambda df: self.reason%( float(df['effective_rent']),float(df['low_effective_rent']) ) if df['effective_rent'] >= df['low_effective_rent'] else None
+                , axis=1
+            )
+        else:
+            pricedb = pd.DataFrame(columns=[cid,reason_col,ratioKey.price.value])
 
         pricedb = pricedb.drop_duplicates([cid])
 
@@ -1760,8 +1784,8 @@ class sub_rec_compstak_price(object):
                 lambda x: json.dumps( {dfKey:[str(x)]} )
             )
 
-        clpair = clpair.merge(pricedb[[cid, reason_col]], on=cid, suffixes=sfx)
-        return clpair[[cid, bid, reason_col]]
+        clpair = clpair.merge(pricedb[[cid, reason_col,ratioKey.price.value]], on=cid, suffixes=sfx)
+        return clpair[[cid, bid, reason_col,ratioKey.price.value]]
 
 
 class sub_rec_talent(object):

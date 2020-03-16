@@ -73,6 +73,11 @@ class secondKey(Enum):
     GTR = 'Great Transit'
     UN = 'Unknown'
 
+class ratioKey(Enum):
+    dist = 'dist_ratio'
+    size = 'size_ratio'
+    price = 'price_ratio'
+
 
 #in the future it can be moved into Variables
 """
@@ -86,6 +91,7 @@ hdargs = {
     "apps":"_200106.csv",
     "otversion":"_200106.csv",
     "jsonFLG":1,
+    "calibrationFLG":1,
     "reason_col_name":{#new version of recommendation reasons
         "reason_close_2_current_location_compstak":
             {"p":11,"useFLG":1,"cache":1,"rsKey":primaryKey.Customerize.value},
@@ -96,15 +102,15 @@ hdargs = {
         "reason_compstak_pricing":
             {"p": 1, "useFLG": 1,"cache":1,"rsKey":primaryKey.Customerize.value},
         "reason_similar_biz":
-            {"p":4,"useFLG":1,"cache":1,"rsKey":primaryKey.Marketplace.value },
+            {"p":4,"useFLG":0,"cache":1,"rsKey":primaryKey.Marketplace.value },
         "reason_similar_company":
-            {"p":6,"useFLG":1,"cache":1,"rsKey":primaryKey.Marketplace.value},
+            {"p":6,"useFLG":0,"cache":1,"rsKey":primaryKey.Marketplace.value},
         "reason_talent_score":
-            {"p":7, "useFLG":1 ,"cache":1,"rsKey":primaryKey.Marketplace.value},
+            {"p":7, "useFLG":0 ,"cache":1,"rsKey":primaryKey.Marketplace.value},
         "reason_location_based_v2":
-            {"p":8,"useFLG":1,"cache":1, "rsKey":primaryKey.Location.value },
+            {"p":8,"useFLG":0,"cache":1, "rsKey":primaryKey.Location.value },
         "reason_great_location":
-            {"p":9,"useFLG":1,"cache":1,"rsKey":primaryKey.Comparison.value},
+            {"p":9,"useFLG":0,"cache":1,"rsKey":primaryKey.Comparison.value},
 
 
         # "reason_model_based":

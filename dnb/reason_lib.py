@@ -160,23 +160,12 @@ def prod_all_reason_in_one_func(ind_city, **context):
             axis=1)
 
         if hdargs["calibrationFLG"]:
-            assert( ratioKey.dist.value in sample_sspd.columns )
-            sample_sspd[ratioKey.dist.value] = sample_sspd[ratioKey.dist.value].fillna(0.7).astype(float)
-            assert (ratioKey.size.value in sample_sspd.columns)
-            sample_sspd[ratioKey.size.value] = sample_sspd[ratioKey.size.value].fillna(0.5).astype(float)
-            assert (ratioKey.price.value in sample_sspd.columns)
-            sample_sspd[ratioKey.price.value] = sample_sspd[ratioKey.price.value].fillna(0.7).astype(float)
+            sample_sspd[ratioKey.dist.value] = sample_sspd[ratioKey.dist.value].fillna(0.7).astype(float) if ratioKey.dist.value in sample_sspd.columns else 0.7
+            sample_sspd[ratioKey.size.value] = sample_sspd[ratioKey.size.value].fillna(0.5).astype(float) if ratioKey.size.value in sample_sspd.columns else 0.5
+            sample_sspd[ratioKey.price.value] = sample_sspd[ratioKey.price.value].fillna(0.7).astype(float) if ratioKey.price.value in sample_sspd.columns else 0.7
             sample_sspd['similarity'] = sample_sspd['similarity']*sample_sspd[ratioKey.dist.value]*sample_sspd[ratioKey.size.value]*sample_sspd[ratioKey.price.value]
 
         sample_sspd['filter'] = ''
-        # filter_cols = [c for c in hdargs["filter_col_name"].keys() if c in sample_sspd.columns ]
-        # if len(filter_cols) > 0:
-        #     sample_sspd['filter'] = sample_sspd.apply(
-        #         lambda x: merge_str_2_json_for_filter( row=x, src_cols= filter_cols, jsKey='filters',default=True),
-        #         axis =1
-        #     )
-        # else:
-        #     sample_sspd['filter'] = ''
     else:
         sample_sspd['reason'] = ''
         sample_sspd['filter'] = ''
@@ -495,6 +484,7 @@ def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, j
     sspd = sspd.loc[lambda df: (df['available_at']<=df['expiration_date']) & (df['capacity_desk'] >= df['demand_desk']) ]
 
     sspd[ratioKey.size.value] = 1.0
+    sspd[ratioKey.size.value] = sspd[ratioKey.size.value].astype(float)
 
     reason_desc = 'The capacity (%d) of this location can hold the client\'s company (%d).'
 

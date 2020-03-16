@@ -1426,6 +1426,7 @@ class sub_rec_location_distance(object):
         loc_comp_loc[ratioKey.dist.value] = loc_comp_loc['geo_dist'].apply(
             lambda df: dist_ratio(df)
         )
+        loc_comp_loc[ratioKey.dist.value] = loc_comp_loc[ratioKey.dist.value].astype(float)
 
         # loc_comp_loc = loc_comp_loc.loc[loc_comp_loc['geo_dist'] <= dist_thresh, :]
 
@@ -1768,7 +1769,8 @@ class sub_rec_compstak_price(object):
             pricedb[ratioKey.price.value] = pricedb.apply(
                 lambda df:price_ratio(df['effective_rent'],df['low_effective_rent']),axis=1
             )
-
+            pricedb[ratioKey.price.value] = pricedb[ratioKey.price.value].astype(float)
+            
             pricedb[reason_col] = pricedb.apply(
                 lambda df: self.reason%( float(df['effective_rent']),float(df['low_effective_rent']) ) if df['effective_rent'] >= df['low_effective_rent'] else None
                 , axis=1

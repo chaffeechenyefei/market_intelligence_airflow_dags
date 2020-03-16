@@ -86,7 +86,7 @@ hdargs = {
     "apps":"_200106.csv",
     "otversion":"_200106.csv",
     "jsonFLG":1,
-    "reason_col_name":{
+    "reason_col_name":{#new version of recommendation reasons
         "reason_close_2_current_location_compstak":
             {"p":11,"useFLG":1,"cache":1,"rsKey":primaryKey.Customerize.value},
         "reason_compstak_x_cdm_inventory":

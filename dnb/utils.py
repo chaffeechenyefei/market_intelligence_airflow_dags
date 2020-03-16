@@ -1770,7 +1770,7 @@ class sub_rec_compstak_price(object):
                 lambda df:price_ratio(df['effective_rent'],df['low_effective_rent']),axis=1
             )
             pricedb[ratioKey.price.value] = pricedb[ratioKey.price.value].astype(float)
-            
+
             pricedb[reason_col] = pricedb.apply(
                 lambda df: self.reason%( float(df['effective_rent']),float(df['low_effective_rent']) ) if df['effective_rent'] >= df['low_effective_rent'] else None
                 , axis=1

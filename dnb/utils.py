@@ -1766,7 +1766,7 @@ class sub_rec_compstak_price(object):
 
         if not pricedb.empty:
             pricedb[ratioKey.price.value] = pricedb.apply(
-                lambda df:price_ratio(df['effective_rent'],df['low_effective_rent'])
+                lambda df:price_ratio(df['effective_rent'],df['low_effective_rent']),axis=1
             )
 
             pricedb[reason_col] = pricedb.apply(

@@ -162,7 +162,7 @@ def prod_all_reason_in_one_func(ind_city, **context):
 
         if hdargs["calibrationFLG"]:
             sample_sspd[ratioKey.dist.value] = sample_sspd[ratioKey.dist.value].fillna(0.9) if ratioKey.dist.value in sample_sspd.columns else 1.0
-            sample_sspd[ratioKey.size.value] = sample_sspd[ratioKey.size.value].fillna(0.7) if ratioKey.size.value in sample_sspd.columns else 1.0
+            sample_sspd[ratioKey.size.value] = sample_sspd[ratioKey.size.value].fillna(0.5) if ratioKey.size.value in sample_sspd.columns else 1.0
             sample_sspd[ratioKey.price.value] = sample_sspd[ratioKey.price.value].fillna(0.9) if ratioKey.price.value in sample_sspd.columns else 1.0
             sample_sspd['similarity'] = sample_sspd['similarity']*sample_sspd[ratioKey.dist.value]*sample_sspd[ratioKey.size.value]*sample_sspd[ratioKey.price.value]
             sample_sspd['similarity'] = sample_sspd['similarity'].pow(1/3)

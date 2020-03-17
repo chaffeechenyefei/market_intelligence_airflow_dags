@@ -77,6 +77,7 @@ class ratioKey(Enum):
     dist = 'dist_ratio'
     size = 'size_ratio'
     price = 'price_ratio'
+    timing = 'timing_ratio'
 
 
 #in the future it can be moved into Variables

@@ -1715,25 +1715,35 @@ class sub_rec_compstak(object):
 
         self.db['month_remain'] = self.db['month_remain'].astype(int)
         self.db = self.db.loc[self.db['month_remain']>0]
-        self.db = self.db.loc[self.db['month_remain'] <= thresh]
+        self.db = self.db.loc[self.db['month_remain'] <= 30]#30 months
 
 
         self.db = self.db.sort_values([cid, 'month_remain']) \
             .drop_duplicates([cid], keep='first')
 
+        def timing_ratio(x):
+            thres = thresh
+            min_val = 0.7
+            return max(exp(-x / (10 * thres)), min_val)
+
+        self.db[ratioKey.timing.value] = self.db['month_remain'].apply(
+            lambda df:timing_ratio(df)
+        )
+        self.db[ratioKey.timing.value] = self.db[ratioKey.timing.value].astype(float)
+
         self.db[reason_col] = self.db['month_remain'].apply(
-            lambda x: self.reason % int(x)
+            lambda x: self.reason % int(x) if int(x) <= thresh else None
         )
 
         dfKey = '%s,%s' % (jsKey, scKey)
 
         if jsFLG:
             self.db[reason_col] = self.db[reason_col].apply(
-                lambda x: json.dumps( {dfKey:[str(x)]} )
+                lambda x: json.dumps( {dfKey:[str(x)]}) if x else None
             )
 
-        clpair = clpair.merge(self.db[[cid, reason_col]], on=cid, suffixes=sfx)
-        return clpair[[cid, bid, reason_col]]
+        clpair = clpair.merge(self.db[[cid, reason_col,ratioKey.timing.value]], on=cid, suffixes=sfx)
+        return clpair[[cid, bid, reason_col,ratioKey.timing.value]]
 
 class sub_rec_compstak_price(object):
     def __init__(self, cpstkdb, cpstkdnb,submarketprice,

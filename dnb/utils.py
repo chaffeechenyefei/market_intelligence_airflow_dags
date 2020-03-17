@@ -1347,7 +1347,7 @@ class sub_rec_similar_company_v2(object):
                 reason = reason_desc % (company_name, industry)
                 similar_feat = []
                 for feat in ['emp_here','emp_total','square_footage']:
-                    if abs(int(df[feat]) - int(df[feat+'_prd']))/(int(df[feat]) + 1e-4) < 0.05:
+                    if abs(int(df[feat]) - int(df[feat+'_prd']))/(int(df[feat]) + 1e-4) < 0.15:
                         similar_feat.append(feat)
                 similar_reason = '%s is similar to the client in %s.'
                 similar_feat_lst = []

@@ -1338,7 +1338,7 @@ class sub_rec_similar_company_v2(object):
                              suffixes=['', '_prd'] )
 
             result = result.rename(columns={cid + '_prd': cid})
-            comp_feat = comp_feat.rename(columns={cid+'_grd': cid})#turn it back
+            comp_feat = comp_feat.rename(columns={cid+'_prd': cid})#turn it back
 
             def translate(df):
                 reason_desc = 'There is a similar company, %s, inside this location which is in the same industry (%s).'

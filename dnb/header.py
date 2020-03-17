@@ -99,15 +99,15 @@ hdargs = {
         "reason_compstak_x_cdm_inventory":
             {"p":12,"useFLG":1,"cache":1,"rsKey":primaryKey.Customerize.value},
         "reason_compstak_timing":
-            {"p": 1, "useFLG": 0,"cache":1,"rsKey":primaryKey.Customerize.value},
+            {"p": 1, "useFLG": 1,"cache":1,"rsKey":primaryKey.Customerize.value},
         "reason_compstak_pricing":
             {"p": 1, "useFLG": 1,"cache":1,"rsKey":primaryKey.Customerize.value},
         "reason_similar_biz":
             {"p":4,"useFLG":0,"cache":1,"rsKey":primaryKey.Marketplace.value },
         "reason_similar_company":
-            {"p":6,"useFLG":0,"cache":1,"rsKey":primaryKey.Marketplace.value},
+            {"p":6,"useFLG":1,"cache":1,"rsKey":primaryKey.Marketplace.value},
         "reason_talent_score":
-            {"p":7, "useFLG":1,"cache":1,"rsKey":primaryKey.Marketplace.value},
+            {"p":7, "useFLG":0,"cache":1,"rsKey":primaryKey.Marketplace.value},
         "reason_location_based_v2":
             {"p":8,"useFLG":0,"cache":1, "rsKey":primaryKey.Location.value },
         "reason_great_location":

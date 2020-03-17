@@ -1244,6 +1244,23 @@ class sub_rec_great_location(object):
 
         return loc_comp_loc
 
+
+class feature_translate_sub_rec_similar_company_v2(object):
+    def __init__(self):
+        self.dict = {
+            'emp_here':'the number of employee in current office site',
+            'square_footage':'the square footage of the office',
+            'emp_total':'the total number of employee'
+        }
+        self.keys = self.dict.keys()
+
+    def getItem(self,featname):
+        if featname in self.keys:
+            return self.dict[featname]
+        else:
+            return None
+
+
 class sub_rec_similar_company_v2(object):
     """
     Retrieve the name of similar company inside the recommended location
@@ -1255,6 +1272,7 @@ class sub_rec_similar_company_v2(object):
         self._sim_thresh = thresh
         self.cid = cid
         self.bid = bid
+        self.feature_translate = feature_translate_sub_rec_similar_company_v2()
 
     def get_reason_batch(self, comp_feat, comp_feat_col, comp_feat_normed, reason_col_name, batch_size=10000,
                          jsFLG=False,jsKey='A'):
@@ -1263,6 +1281,9 @@ class sub_rec_similar_company_v2(object):
         cid = self.cid
         bid = self.bid
         gr_dat = self._gr_dat
+
+        comp_feat[['emp_here', 'emp_total', 'square_footage']] = comp_feat[
+            ['emp_here', 'emp_total', 'square_footage']].fillna(0)
 
         batch_iter = ceil(1.0 * len(self._pred_dat) / batch_size)
         total_result = []
@@ -1301,22 +1322,57 @@ class sub_rec_similar_company_v2(object):
             result = pred_gr_dat2.loc[
                 pred_gr_dat2.groupby([bid, cid + '_prd'])['dist'].idxmin()].reset_index(drop=True)
 
-            result = result.loc[result['dist'] <= self._sim_thresh, :]
+            result = result.loc[result['dist'] <= self._sim_thresh]
 
+            result = result[[bid,cid+'_prd',cid+'_grd']]
+            #details
+
+            comp_feat = comp_feat.rename(columns={cid:cid+'_grd'})
             result = \
-                result.merge(comp_feat[[cid, 'business_name']], left_on=cid + '_grd', right_on=cid,
-                             how='left',
-                             suffixes=['', '_useless'])[[bid, cid + '_prd', 'business_name', 'dist']]
-            result = result.rename(columns={'business_name': reason_col_name, cid + '_prd': cid})
+                result.merge(comp_feat[[cid+'_grd', 'business_name','primary_sic_6_digit_v2','emp_here','emp_total','square_footage']], on=cid + '_grd',
+                             suffixes=['', '_useless'])
 
-            result['dist'] = result['dist'].round(4)
-            result[reason_col_name] = 'There is a similar company, ' + result[
-                reason_col_name] + ', inside this location.'
+            comp_feat = comp_feat.rename(columns={cid+'_grd': cid + '_prd'})
+            result = \
+                result.merge(comp_feat[[cid+'_prd', 'emp_here','emp_total','square_footage']], on=cid+'_prd',
+                             suffixes=['', '_prd'] )
+
+            result = result.rename(columns={cid + '_prd': cid})
+
+            def translate(df):
+                reason_desc = 'There is a similar company, %s, inside this location which is in the same industry (%s).'
+                industry = str(df['primary_sic_6_digit_v2']) if df else ''
+                company_name = str(df['business_name']) if df else ''
+                reason = reason_desc % (company_name, industry)
+                similar_feat = []
+                for feat in ['emp_here','emp_total','square_footage']:
+                    if abs(int(df[feat]) - int(df[feat+'_prd']))/(int(df[feat]) + 1e-4) < 0.05:
+                        similar_feat.append(feat)
+                similar_reason = '%s is similar to the client in %s.'
+                similar_feat_lst = []
+                for feat in similar_feat:
+                    feat_phrase = self.feature_translate.getItem(feat)
+                    if feat_phrase:
+                        similar_feat_lst.append(feat_phrase)
+
+                similar_feat_lst = list2str_and(similar_feat_lst,delimeter = ',')
+                if similar_feat_lst:
+                    similar_feat_lst = similar_reason%(company_name, similar_feat_lst)
+                    reason = reason + ' ' + similar_feat_lst
+
+                return reason
+
+            if not result.empty:
+                result[reason_col_name] = result.apply(
+                    lambda df: translate(df), axis=1
+                )
+            else:
+                result = pd.DataFrame(columns=[cid,bid,reason_col_name])
 
             dfKey = '%s,%s' % (jsKey, scKey)
             if jsFLG:
                 result[reason_col_name] = result[reason_col_name].apply(
-                    lambda x: json.dumps( {dfKey:[str(x)]} )
+                    lambda x: json.dumps( {dfKey:[str(x)]} ) if x else None
                 )
             total_result.append(result)
 

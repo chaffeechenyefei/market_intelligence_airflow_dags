@@ -1341,8 +1341,8 @@ class sub_rec_similar_company_v2(object):
 
             def translate(df):
                 reason_desc = 'There is a similar company, %s, inside this location which is in the same industry (%s).'
-                industry = str(df['primary_sic_6_digit_v2']) if df else ''
-                company_name = str(df['business_name']) if df else ''
+                industry = str(df['primary_sic_6_digit_v2']) if df['primary_sic_6_digit_v2'] else ''
+                company_name = str(df['business_name']) if df['business_name'] else ''
                 reason = reason_desc % (company_name, industry)
                 similar_feat = []
                 for feat in ['emp_here','emp_total','square_footage']:

@@ -1356,7 +1356,7 @@ class sub_rec_similar_company_v2(object):
                     if feat_phrase:
                         similar_feat_lst.append(feat_phrase)
 
-                similar_feat_lst = list2str_and(similar_feat_lst,delimeter = ',')
+                similar_feat_lst = list2str_and(similar_feat_lst,delimeter = ', ')
                 if similar_feat_lst:
                     similar_feat_lst = similar_reason%(company_name, similar_feat_lst)
                     reason = reason + ' ' + similar_feat_lst

@@ -51,7 +51,7 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
         ssfile_name = ssfile_name.replace(hdargs["apps"],'_new_account'+hdargs["apps"] )
         sspd_file = pjoin(datapath_mid, ssfile_name)
     if not os.path.isfile(sspd_file):
-        print('skipped')
+        print('%s skipped'%sspd_file)
         return
 
     """

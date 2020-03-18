@@ -26,7 +26,7 @@ args = {
 Create a DAG to execute tasks
 """
 dag = DAG(
-    dag_id='dnb_prediction_dev',
+    dag_id='dnb_prediction_new_account_dev',
     default_args=args,
     schedule_interval=None,
 )
@@ -54,6 +54,7 @@ bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--data_path %s ' \
                     '--mode predict --batch-size 1 --airflow --all ' \
                     '%s ' \
+                    '--new_account' \
            % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath,feat_cmd)
 print('bash_cmd_predict: >> %s' % bash_cmd_predict)
 exe_op = BashOperator(
@@ -63,40 +64,19 @@ exe_op = BashOperator(
 )
 
 
-
-
-embedding_exe = hdargs["dnb_dnn_embedding_exe"]
-bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
-                             '--path %s ' \
-                             '--model %s ' \
-                             '--run_root %s ' \
-                             '--apps %s ' \
-                             '--dbname %s ' \
-                             '--ww ' \
-                             '--maxK 150 ' \
-                             '%s ' \
-                    %(program_path, embedding_exe, datapath , model, run_root,apps,dbname,feat_cmd )
-print('bash_cmd_produce_embedding: >> %s'% bash_cmd_produce_embedding)
-emb_op = BashOperator(
-    task_id = 'dnb_produce_embedding',
-    bash_command = bash_cmd_produce_embedding,
-    dag = dag,
-)
-
-
-task_data_id = 'dnb_produce_prediction_pair'
-pair_file = '%s_ww_loc_x_duns.csv'
+task_data_id = 'dnb_produce_prediction_pair_new_account'
+pair_file = '%s_ww_loc_x_duns_new_account.csv'
 data_op = PythonOperator(
     task_id = task_data_id,
     python_callable = dnblib.prod_prediction_pair, #depends on embedding file
     op_kwargs = {
         'save_filename':pair_file,
-        'new_account':False,
+        'new_account':True,
     },
     dag = dag,
 )
 
-emb_op >> data_op >> exe_op
+data_op >> exe_op
 
 
 

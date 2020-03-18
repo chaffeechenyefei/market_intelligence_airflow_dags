@@ -27,7 +27,7 @@ def load_salesforce_dnb_match(db='' ,table='relation_dnb_account_0120.csv'):
     city = 'physical_city'
     dnb_city = sfdnb.groupby([cid ,city]).first().reset_index()[[cid ,city]].rename(columns={city :'city'})
     print( '%d dnb_city generated' %len(dnb_city))
-    dnb_city.to_csv(pj(datapath_mid ,salesforce_dnb_file))
+    dnb_city.to_csv(pj(datapath_mid ,salesforce_dnb_file))#[cid,city]
     return sfdnb
 
 
@@ -56,6 +56,7 @@ if __name__ == '__main__':
     total = len(dedup_sfdnb)
 
     sfdnb_lst = []
+    nosfdnb_lst = []
     for ind_city,cur_city_name in enumerate(citylongname):
         """
         Here filter is a must. Because not all the duns_number is valid. Need to check why?
@@ -68,9 +69,15 @@ if __name__ == '__main__':
         sfdnb_lst.append( tmp )
         print('%d'%len(tmp))
 
+        tmp2 = comp_dat.merge(dedup_sfdnb,on=[cid,city],suffixes=sfx,how='left')
+        tmp2 = tmp2.loc[lambda df: df[fid].isnull()]
+        nosfdnb_lst.append(tmp2)
+
     sfdnb_lst = pd.concat(sfdnb_lst,axis=0)
+    nosfdnb_lst = pd.concat(nosfdnb_lst, axis=0)
 
     print( '%d of %d covered'% (len(sfdnb_lst),total))
+    print('%d of %d not covered' % (len(nosfdnb_lst), total))
 
     sfdnb_lst = sfdnb_lst.rename(columns={
         'physical_zip_all':'zip_code',
@@ -82,6 +89,18 @@ if __name__ == '__main__':
     sfdnb_lst = sfdnb_lst.drop_duplicates(['sfdc_account_id', cid, 'city'], keep='first').reset_index()
     print('Second Shrinkage: %d'%len(sfdnb_lst))
     sfdnb_lst.to_csv(pj(datapath_mid,salesforce_dnb_info_file))
+
+    nosfdnb_lst = nosfdnb_lst.rename(columns={
+        'physical_zip_all': 'zip_code',
+        city: 'city',
+        'business_name': 'company_name',
+        fid: 'sfdc_account_id',
+    })
+
+    nosfdnb_lst[city] = nosfdnb_lst['city']
+
+    print(' %d saving'%len(nosfdnb_lst))
+    nosfdnb_lst.to_csv(pj(datapath_mid,no_salesforce_dnb_info_file))
 
     print('Done')
 

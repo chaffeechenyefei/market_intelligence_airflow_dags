@@ -473,8 +473,12 @@ Produce prediction file
 """
 def prod_prediction_pair(**op_kwargs):
     save_filename = op_kwargs['save_filename']
+    is_new_account = op_kwargs['new_account']
     print('Loading dnb account within salesforce')
-    pdc_all = pd.read_csv(pjoin(datapath_mid, salesforce_dnb_file))[[cid, 'city']]
+    if is_new_account:
+        pdc_all = pd.read_csv(pjoin(datapath_mid, no_salesforce_dnb_info_file))[[cid, 'city']]
+    else:
+        pdc_all = pd.read_csv(pjoin(datapath_mid, salesforce_dnb_file))[[cid, 'city']]
     print('Loading location which has been embedded')
     loc_emb_feat_name = 'location_feat_emb_' + hdargs["dnb_dnn_cmd"]["model"] + '.csv'
     loc_ww = pd.read_csv(pj(datapath_mid,loc_emb_feat_name),index_col=0)

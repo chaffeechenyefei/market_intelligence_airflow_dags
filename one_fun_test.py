@@ -11,6 +11,6 @@ print('##one function test')
 #     print('rslib.prod_all_reason_in_one_func()')
 #     rslib.prod_all_reason_in_one_func(ind_city=ind_city)
 
-rslib.prod_all_reason_in_one_func(ind_city=42)
+rslib.prod_all_reason_in_one_func(ind_city=42,is_account_new=True)
 # rslib.data_merge_for_all_cities()
 print('##Done')

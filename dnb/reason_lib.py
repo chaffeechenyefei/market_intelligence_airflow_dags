@@ -37,14 +37,19 @@ def prod_prepare_data():
 
 
 
-def prod_all_reason_in_one_func(ind_city, **context):
+def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
     """
     Doing all the reasonings in one function sequentially.
     :param ind_city: 
     :param context: 
     :return: 
     """
-    sspd_file = pjoin(datapath_mid, ssfile[ind_city])
+    if not is_account_new:
+        sspd_file = pjoin(datapath_mid, ssfile[ind_city])
+    else:
+        ssfile_name = ssfile[ind_city]
+        ssfile_name = ssfile_name.replace(hdargs["apps"],'_new_account'+hdargs["apps"] )
+        sspd_file = pjoin(datapath_mid, ssfile_name)
     if not os.path.isfile(sspd_file):
         print('skipped')
         return
@@ -124,7 +129,12 @@ def prod_all_reason_in_one_func(ind_city, **context):
     reason_names = hdargs["reason_col_name"]
     sub_reason_file_names = {}
     for reason_name in reason_names.keys():
-        sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
+        ## reason file name to be saved
+        if not is_account_new:
+            sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + hdargs['otversion']
+        else:
+            sub_reason_file_names[reason_name] = cityabbr[ind_city] + '_' + reason_name + '_new_account' + hdargs['otversion']
+
         if reason_names[reason_name]["useFLG"]:
             sub_reason_file_name = sub_reason_file_names[reason_name]
             #if produce, it will be removed.
@@ -136,7 +146,10 @@ def prod_all_reason_in_one_func(ind_city, **context):
             exe_func( sub_reason_col_name=reason_name, sub_reason_file_name=sub_reason_file_name, jsKey = jsKey, **kwargs )
 
     print('==> Merging reasons')
-    city_reason_file_name = rsfile[ind_city]
+    if not is_account_new:
+        city_reason_file_name = rsfile[ind_city]
+    else:
+        city_reason_file_name = rsfile[ind_city].replace(hdargs["apps"],'_account_new'+hdargs["apps"])
     sample_sspd = sspd
     exist_reason = []
     for reason_name, value in reason_names.items():

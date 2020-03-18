@@ -65,23 +65,23 @@ exe_op = BashOperator(
 
 
 
-embedding_exe = hdargs["dnb_dnn_embedding_exe"]
-bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
-                             '--path %s ' \
-                             '--model %s ' \
-                             '--run_root %s ' \
-                             '--apps %s ' \
-                             '--dbname %s ' \
-                             '--ww ' \
-                             '--maxK 150 ' \
-                             '%s ' \
-                    %(program_path, embedding_exe, datapath , model, run_root,apps,dbname,feat_cmd )
-print('bash_cmd_produce_embedding: >> %s'% bash_cmd_produce_embedding)
-emb_op = BashOperator(
-    task_id = 'dnb_produce_embedding',
-    bash_command = bash_cmd_produce_embedding,
-    dag = dag,
-)
+# embedding_exe = hdargs["dnb_dnn_embedding_exe"]
+# bash_cmd_produce_embedding = 'cd %s && python3 -u %s ' \
+#                              '--path %s ' \
+#                              '--model %s ' \
+#                              '--run_root %s ' \
+#                              '--apps %s ' \
+#                              '--dbname %s ' \
+#                              '--ww ' \
+#                              '--maxK 150 ' \
+#                              '%s ' \
+#                     %(program_path, embedding_exe, datapath , model, run_root,apps,dbname,feat_cmd )
+# print('bash_cmd_produce_embedding: >> %s'% bash_cmd_produce_embedding)
+# emb_op = BashOperator(
+#     task_id = 'dnb_produce_embedding',
+#     bash_command = bash_cmd_produce_embedding,
+#     dag = dag,
+# )
 
 
 task_data_id = 'dnb_produce_prediction_pair'
@@ -96,7 +96,9 @@ data_op = PythonOperator(
     dag = dag,
 )
 
-emb_op >> data_op >> exe_op
+# emb_op >> data_op >> exe_op
+#skip embedding
+data_op >> exe_op
 
 
 

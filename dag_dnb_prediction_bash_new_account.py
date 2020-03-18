@@ -54,7 +54,8 @@ bash_cmd_predict = 'cd %s && python3 -u %s ' \
                     '--data_path %s ' \
                     '--mode predict --batch-size 1 --airflow --all ' \
                     '%s ' \
-                    '--new_account' \
+                    '--query_location ' \
+                    '--new_account ' \
            % (program_path, prediction_exe, run_root, model, lr, apps, dbname, datapath,feat_cmd)
 print('bash_cmd_predict: >> %s' % bash_cmd_predict)
 exe_op = BashOperator(

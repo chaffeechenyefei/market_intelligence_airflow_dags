@@ -78,7 +78,7 @@ for ind_city in range(len(citylongname)):
         python_callable=rslib.prod_all_reason_in_one_func,
         op_kwargs={
             'ind_city': ind_city,
-            'is_new_account':False,
+            'is_account_new':False,
         },
         dag=dag,
     )

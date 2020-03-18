@@ -144,6 +144,10 @@ hdargs = {
     "dev_db":"reason_table",
     "test":0, #whether using test_db(space/folder) or dev_db
     "final_file_name":"result/sub_all_similarity_multi",
+    "final_file_name_new_account":"result/sub_all_similarity_multi_new_account",
+
+    "recommendation_score_file":"result/recommendation_reason_%s.csv",
+    "recommendation_score_new_account_file":"result/recommendation_reason_new_account_%s.csv",
 
     "do_data_split":0, #whether doing data split
     "ratio_data_split":0.9,

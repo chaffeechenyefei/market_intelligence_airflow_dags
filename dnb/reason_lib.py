@@ -4,6 +4,22 @@ import dnb.data_loader as data_loader
 import sys
 
 sfx = ['','_right']
+duns_for_selected = [8900629, 965324655, 63407694, 97916953,
+                     41311187, 80282091, 968544028, 81116354,
+                     92952713,
+                     80582771, 75824558, 42472380, 42019874,
+                     80762681, 965522118,
+                     65786502, 72148831, 80660916, 81209201,
+                     196532191, 47132640,
+                     43271786, 796371933, 81009915,
+                     872951269, 80614333, 80180758, 51631832,
+                     74157331, 80775063,
+                     13895459, 80388989, 80482577,
+                     21588858, 78521935, 80385047,
+                     78777722, 78777721, 835524919, 96733699,
+                     39590514,
+                     177265824, 80414232, 78777764,
+                     ]
 
 def set_xcom_var(ti, key, value):
     ti.xcom_push(key=key, value=value)
@@ -202,6 +218,7 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
     sample_sspd.to_csv(pjoin(datapath_mid, city_reason_file_name))
     print('==> Done')
 
+
 def data_merge_for_all_cities():
     """
     Merge all the files of cities into one and format it for output.
@@ -243,22 +260,7 @@ def data_merge_for_all_cities():
 
     dfs = dfs.merge(add_info_dat, on=cid, suffixes=sfx)
 
-    dfs['selected'] = dfs['duns_number'].apply(lambda x: True if int(x) in [8900629, 965324655, 63407694, 97916953,
-                                                                            41311187, 80282091, 968544028, 81116354,
-                                                                            92952713,
-                                                                            80582771, 75824558, 42472380, 42019874,
-                                                                            80762681, 965522118,
-                                                                            65786502, 72148831, 80660916, 81209201,
-                                                                            196532191, 47132640,
-                                                                            43271786, 796371933, 81009915,
-                                                                            872951269, 80614333, 80180758, 51631832,
-                                                                            74157331, 80775063,
-                                                                            13895459, 80388989, 80482577,
-                                                                            21588858, 78521935, 80385047,
-                                                                            78777722, 78777721, 835524919, 96733699,
-                                                                            39590514,
-                                                                            177265824, 80414232, 78777764,
-                                                                            ] else False)
+    dfs['selected'] = dfs['duns_number'].apply(lambda x: True if int(x) in duns_for_selected else False)
 
     dfs = dfs[
         ['sfdc_account_id', 'account_name', 'building_id', bid, 'similarity', 'note', 'algorithm', cid, 'company_name',
@@ -269,7 +271,64 @@ def data_merge_for_all_cities():
     print('#%d --> #%d after deduplication'%(len_dup,len(dfs)))
 
     today = datetime.date.today()
-    dfs.to_csv(pj(datapath,'result/recommendation_reason_%s.csv'%str(today)),index=False)
+    dfs.to_csv(pj(datapath,hdargs["recommendation_score_file"]%str(today)),index=False)
+    print('Done! %d saved'%len(dfs))
+
+
+def data_merge_for_all_cities_new_account():
+    """
+    Merge all the files of cities into one and format it for output.
+    This is new account version where sfaccid is null.
+    :return: 
+    """
+    print('merging results')
+    dfs = []
+    for filename in rsfile:
+        filename = filename.replace(hdargs["apps"],'_account_new'+hdargs["apps"])
+        db_path = pjoin(datapath_mid, filename)
+        if os.path.isfile(db_path):
+            dfs.append(pd.read_csv(db_path, index_col=0))
+        else:
+            print('Missing: %s'%str(db_path))
+
+    dfs = pd.concat(dfs, axis=0).reset_index(drop=True)
+
+    loc_df = dfs.drop_duplicates(bid)[[bid]].reset_index(drop=True)
+
+    dfs_list = [cid, 'similarity', 'note', 'algorithm', 'atlas_location_uuid','filter']
+    dfs = dfs[dfs_list]
+    dfs['building_id'] = None
+    dfs['sfdc_account_id'] = 'Not_Assigned'
+
+
+    col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid, 'filter']
+    dfs = dfs[col_list]
+
+    if TEST_FLG:#result/sub_all_similarity_multi[_test][_200106.csv]
+        dfs.to_csv( pj( datapath,hdargs["final_file_name_new_account"] + '_test' + hdargs["otversion"]), index=False)
+    else:
+        dfs.to_csv(pj(datapath, hdargs["final_file_name_new_account"]+ hdargs["otversion"]), index=False)
+
+    print('dnb_atlas score saved...')
+
+    add_info_dat = pd.read_csv(pj(datapath_mid, no_salesforce_dnb_info_file), index_col=0)[
+        [cid, 'company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
+
+    dfs = dfs.merge(add_info_dat, on=cid, suffixes=sfx)
+    dfs['account_name'] = dfs['company_name']
+
+    dfs['selected'] = dfs['duns_number'].apply(lambda x: True if int(x) in duns_for_selected else False)
+
+    dfs = dfs[
+        ['sfdc_account_id', 'account_name', 'building_id', bid, 'similarity', 'note', 'algorithm', cid, 'company_name',
+         'city', 'zip_code', 'state', 'longitude', 'latitude','selected','filter']]
+    len_dup = len(dfs)
+    print('Dedupliation')
+    dfs = dfs.sort_values(['account_name',bid,'similarity']).drop_duplicates(['sfdc_account_id',bid],keep='last')
+    print('#%d --> #%d after deduplication'%(len_dup,len(dfs)))
+
+    today = datetime.date.today()
+    dfs.to_csv(pj(datapath, hdargs["recommendation_score_new_account_file"]%str(today)),index=False)
     print('Done! %d saved'%len(dfs))
 
 

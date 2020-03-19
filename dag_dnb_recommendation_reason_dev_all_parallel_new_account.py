@@ -39,11 +39,16 @@ dag = DAG(
     schedule_interval=None,
 )
 
-main_op = PythonOperator(
-    task_id = 'Main_entrance',
-    python_callable = rslib.prod_prepare_data,
-    dag= dag,
-    )
+
+main_op = DummyOperator(
+    task_id='Main_entrance',
+    dag=dag,
+)
+# main_op = PythonOperator(
+#     task_id = 'Main_entrance',
+#     python_callable = rslib.prod_prepare_data,
+#     dag= dag,
+#     )
 
 end_op = DummyOperator(
     task_id = 'End',

@@ -309,22 +309,23 @@ def data_merge_for_all_cities_new_account():
     else:
         dfs.to_csv(pj(datapath, hdargs["final_file_name_new_account"]+ hdargs["otversion"]), index=False)
 
-    print('dnb_atlas score saved...')
+    print('%d dnb_atlas score saved...'%len(dfs))
 
     add_info_dat = pd.read_csv(pj(datapath_mid, no_salesforce_dnb_info_file), index_col=0)[
         [cid, 'company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
 
     dfs = dfs.merge(add_info_dat, on=cid, suffixes=sfx)
     dfs['account_name'] = dfs['company_name']
+    print('%d info added'%len(dfs))
 
-    dfs['selected'] = dfs['duns_number'].apply(lambda x: True if int(x) in duns_for_selected else False)
+    dfs['selected'] = dfs[cid].apply(lambda x: True if int(x) in duns_for_selected else False)
 
     dfs = dfs[
         ['sfdc_account_id', 'account_name', 'building_id', bid, 'similarity', 'note', 'algorithm', cid, 'company_name',
          'city', 'zip_code', 'state', 'longitude', 'latitude','selected','filter']]
     len_dup = len(dfs)
     print('Dedupliation')
-    dfs = dfs.sort_values(['account_name',bid,'similarity']).drop_duplicates(['sfdc_account_id',bid],keep='last')
+    dfs = dfs.sort_values(['account_name',bid,'similarity']).drop_duplicates(['account_name',bid],keep='last')
     print('#%d --> #%d after deduplication'%(len_dup,len(dfs)))
 
     today = datetime.date.today()

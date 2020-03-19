@@ -91,7 +91,7 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
                             suffixes=sfx)  # multi comp loc
     print('==> %d locations inside the city' % len(sub_loc_feat_ww))
 
-    sspd = pd.read_csv(pjoin(datapath_mid, ssfile[ind_city]), index_col=0)
+    sspd = pd.read_csv(sspd_file, index_col=0)
     total_pairs_num = len(sspd)
     print('==> %d pairs of recommendation score' % total_pairs_num)
 
@@ -284,7 +284,7 @@ def data_merge_for_all_cities_new_account():
     print('merging results')
     dfs = []
     for filename in rsfile:
-        filename = filename.replace(hdargs["apps"],'_account_new'+hdargs["apps"])
+        filename = filename.replace(hdargs["otversion"],'_account_new'+hdargs["otversion"])
         db_path = pjoin(datapath_mid, filename)
         if os.path.isfile(db_path):
             dfs.append(pd.read_csv(db_path, index_col=0))
@@ -293,15 +293,13 @@ def data_merge_for_all_cities_new_account():
 
     dfs = pd.concat(dfs, axis=0).reset_index(drop=True)
 
-    loc_df = dfs.drop_duplicates(bid)[[bid]].reset_index(drop=True)
+    # loc_df = dfs.drop_duplicates(bid)[[bid]].reset_index(drop=True)
 
     dfs_list = [cid, 'similarity', 'note', 'algorithm', 'atlas_location_uuid','filter']
     dfs = dfs[dfs_list]
     dfs['building_id'] = None
-    dfs['sfdc_account_id'] = 'Not_Assigned'
 
-
-    col_list = ['sfdc_account_id', cid, 'building_id', 'similarity', 'note', 'algorithm', bid, 'filter']
+    col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid, 'filter']
     dfs = dfs[col_list]
 
     if TEST_FLG:#result/sub_all_similarity_multi[_test][_200106.csv]
@@ -312,7 +310,7 @@ def data_merge_for_all_cities_new_account():
     print('%d dnb_atlas score saved...'%len(dfs))
 
     add_info_dat = pd.read_csv(pj(datapath_mid, no_salesforce_dnb_info_file), index_col=0)[
-        [cid, 'company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
+        [cid,'sfdc_account_id','account_name','company_name', 'city', 'zip_code', 'state', 'longitude', 'latitude']]
 
     dfs = dfs.merge(add_info_dat, on=cid, suffixes=sfx)
     dfs['account_name'] = dfs['company_name']

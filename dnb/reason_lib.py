@@ -301,7 +301,7 @@ def data_merge_for_all_cities_new_account():
     dfs['sfdc_account_id'] = 'Not_Assigned'
 
 
-    col_list = [cid, 'building_id', 'similarity', 'note', 'algorithm', bid, 'filter']
+    col_list = ['sfdc_account_id', cid, 'building_id', 'similarity', 'note', 'algorithm', bid, 'filter']
     dfs = dfs[col_list]
 
     if TEST_FLG:#result/sub_all_similarity_multi[_test][_200106.csv]

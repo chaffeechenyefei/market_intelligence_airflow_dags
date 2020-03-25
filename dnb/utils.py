@@ -636,6 +636,15 @@ def merge_str_2_json_rowise_reformat_v2(row, src_cols: list, jsKey='reasons', ta
     return json.dumps(jsRs)
 
 def merge_str_2_json_rowise_reformat_v3(row, src_cols=[], jsKey='reasons'):
+    """
+    Merge a list of columns into one column with a given json key.
+    Each input columns is composed of a dictionary like {reason_key:[reasons]}.
+    If the keys of different dictionary are coincide, reasons will be merged together instead of replacing.
+    :param row: 
+    :param src_cols: 
+    :param jsKey: 
+    :return: 
+    """
     n_reasons = {}
     d_lst = []
     for src_col in src_cols:

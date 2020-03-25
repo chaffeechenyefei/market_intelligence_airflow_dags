@@ -30,7 +30,11 @@ def get_xcom_var(ti, task_id, key):
 
 
 def prod_prepare_data():
-    ## average price data
+    """
+    In this function, some aggregated tables will be generated. Those tables might be used very frequently.
+     Thus, we process and store them before head.
+    """
+    ## average price data for submarket level.
     dtld = data_loader.data_process(root_path=datapath)
     dbname = pjoin(datapath,compstak_file)
     compstak_submarket_avg_price = dtld.load_submarket_avg_price(db='',dbname=dbname)
@@ -55,7 +59,8 @@ def prod_prepare_data():
 
 def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
     """
-    Doing all the reasonings in one function sequentially.
+    Doing all the reasonings in one function sequentially. 
+    All the reason are based on similarity table, which is named sspd here for simplicity.
     :param ind_city: 
     :param context: 
     :return: 
@@ -72,7 +77,8 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
         return
 
     """
-    load data here
+    Load useful data before head in order to decrease the cost of I/O.
+    But it might cause M.O.O. in the future.
     """
     print('##city: %s processing##' % citylongname[ind_city])
     comp_feat = pd.read_csv(pjoin(datapath, cfile[ind_city]))
@@ -82,6 +88,7 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
     loc_feat = loc_feat.merge(comp_loc[[bid]].groupby(bid).first().reset_index(),
                               on=bid, suffixes=sfx)
     print('Global filtering')
+    # locations in specific city will remain
     global_ft = global_filter(loc_feat=loc_feat)
     sub_loc_feat = global_ft.city_filter(city_name=cityname[ind_city]).end()
 
@@ -114,7 +121,12 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
     cdm_capacity = pd.read_csv(pjoin(datapath,cdm_capacity_file),index_col=0)
     print('==> %d cdm capacity loaded'%len(cdm_capacity))
 
-
+    """
+    Z-score normalized feature is loaded here. 
+    It is different from that of comp_feat/loc_feat where original feature is stored.
+    It is a very exhausted operation because the whole company features are stored in one file.
+    Need to be accelerated.
+    """
     comp_feat_normed = pd.read_csv(pjoin(datapath_mid, comp_feat_file), index_col=0)
     if 'city' in comp_feat_normed.columns:
         comp_feat_normed = comp_feat_normed.loc[comp_feat_normed['city'] == cityname[ind_city]]
@@ -143,6 +155,11 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
         total_pairs_num = total_pairs_num,
     )
 
+    """
+    Reasons for each city are executed sequentially according to "reason_col_name" in header.py.
+    "useFLG" will decide whether the reason will be executed. 
+    "cache" will decide whether the stored/cached file of reason should be used.
+    """
     reason_names = hdargs["reason_col_name"]
     sub_reason_file_names = {}
     for reason_name in reason_names.keys():
@@ -166,7 +183,7 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
     if not is_account_new:
         city_reason_file_name = rsfile[ind_city]
     else:
-        city_reason_file_name = rsfile[ind_city].replace(hdargs["apps"],'_account_new'+hdargs["apps"])
+        city_reason_file_name = rsfile[ind_city].replace(hdargs["otversion"],'_account_new'+hdargs["otversion"])
     sample_sspd = sspd
     exist_reason = []
     for reason_name, value in reason_names.items():
@@ -182,6 +199,10 @@ def prod_all_reason_in_one_func(ind_city, is_account_new ,**context):
 
     # sample_sspd = sample_sspd.fillna('')
     print('Json format transforming...')
+    """
+    Calibration and merging all the json formatted reasons into one file is performed here.
+    sorted_reason_col_name is out-of-date, which will rank the reasons according to their priority.
+    """
     sorted_reason_col_name = sorted(reason_names.items(), key=lambda x: x[1]['p'])
     sorted_reason_col_name = [c[0] for c in sorted_reason_col_name if c[0] in exist_reason]
     if len(sample_sspd) > 0:
@@ -444,7 +465,10 @@ def data_prepare(ind_city,**context):
 
 def reason_similar_biz( sub_reason_col_name, sub_reason_file_name, jsKey ,**kwargs):
     """
-    json++
+    Give information about whether there is a company in similar industry inside the location. 
+    Here, 'inside' is not an accurate description because the lat/lng of company is \
+    used to judge whether there is an office site inside the location.
+    matching_col is used to decide how detailed the industry should be.
     + jsKey, function name
     """
     reason_col_name = sys._getframe().f_code.co_name
@@ -502,7 +526,10 @@ def reason_close_2_current_location(sub_reason_col_name, sub_reason_file_name, j
 
 def reason_close_2_current_location_compstak(sub_reason_col_name, sub_reason_file_name, jsKey,**kwargs):
     """
-    json++
+    For each account, the location of his nearby lease will be used as his current location.
+     Thus the distance is performed based on that. The compstak file contains the lat/lng of his current location.
+     And the lat/lng of recommended location can be found in location scorecard(loc_feat).
+     sspd : user_id,recommended_location_uuid
     :param sub_reason_col_name: 
     :param sub_reason_file_name: 
     :param kwargs: 
@@ -534,6 +561,18 @@ def reason_close_2_current_location_compstak(sub_reason_col_name, sub_reason_fil
 Need to check
 """
 def reason_compstak_x_cdm_inventory(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
+    """
+    The function is intended to see whether the recommended location is suitable to that company, 
+    which means for each account and recommended location, the size of account and the capacity \
+     of location matched.
+    Here SKU level is used for matching. Not only size but also available time is taken into consideration. 
+    The size of company is obtained by transaction size/100 and the capacity is obtained from file in snowflake. 
+    :param sub_reason_col_name: 
+    :param sub_reason_file_name: 
+    :param jsKey: 
+    :param kwargs: 
+    :return: 
+    """
     reason_col_name = sys._getframe().f_code.co_name
     print('%s: Inventory bom' % reason_col_name)
     sspd = kwargs['sspd']
@@ -619,7 +658,7 @@ def reason_inventory_bom(sub_reason_col_name, sub_reason_file_name, jsKey, **kwa
 
 def reason_talent_score(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
     """
-    json++
+    It is a city level score. Each city will have an identical score.
     :param sub_reason_col_name: 
     :param sub_reason_file_name: 
     :param kwargs: 
@@ -673,7 +712,7 @@ def reason_compstak(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
 
 def reason_compstak_timing(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
     """
-    json++
+    Give information about whether the nearby lease of the account will be expired in 18 months.
     :param sub_reason_col_name: 
     :param sub_reason_file_name: 
     :param kwargs: 
@@ -700,7 +739,9 @@ def reason_compstak_timing(sub_reason_col_name, sub_reason_file_name, jsKey, **k
 
 def reason_compstak_pricing(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
     """
-    json++
+    The price of account's nearby lease will be compared with the average level of his submarket. 
+    If the price is too low, it is not easy to persuade the client to move.
+    The effective_rent in compstak is used as his price per square.
     :param sub_reason_col_name: 
     :param sub_reason_file_name: 
     :param kwargs: 
@@ -732,7 +773,9 @@ def reason_compstak_pricing(sub_reason_col_name, sub_reason_file_name, jsKey, **
 
 def reason_similar_company(sub_reason_col_name, sub_reason_file_name, jsKey, **kwargs):
     """
-    json++
+    The function is intended to give information about whether there is a similar company inside the location.
+    Also 'inside' is inferred by geo info. And the similarity is based on the condition that both of them should come from the same industry.
+    Here, matching_col is used to see how detailed the industry should be.
     :param sub_reason_col_name: 
     :param sub_reason_file_name: 
     :param kwargs: 
@@ -775,6 +818,8 @@ def reason_similar_company(sub_reason_col_name, sub_reason_file_name, jsKey, **k
 
 def reason_great_location(sub_reason_col_name, sub_reason_file_name, jsKey ,**kwargs):
     """
+    To see whether the recommended location is greater than the company's current location.
+    The company's current location is obtained by his nearby lease.
     """
     reason_col_name = sys._getframe().f_code.co_name
     print('%s: Is the recommended location greater than current one?'%reason_col_name)
@@ -833,7 +878,7 @@ def reason_similar_location(sub_reason_col_name, sub_reason_file_name, jsKey ,**
 
 def reason_location_based_v2(sub_reason_col_name, sub_reason_file_name,jsKey , **kwargs):
     """
-    json++
+    To see whether the location is outstanding in those aspects described in cond_cols.
     + jskey, function name
     """
     scKey = secondKey.GA.value
